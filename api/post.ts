@@ -1,3 +1,5 @@
+import { kv } from '@vercel/kv';
+
 export const config = {
     runtime: 'edge',
 };
@@ -22,23 +24,40 @@ export default async function handler(request: Request) {
             });
         }
 
-        // TODO: Verify apiKey here
-        // TODO: Save to database (KV / Postgres)
+        // Generate a simple ID
+        const id = Date.now();
+        const newPost = {
+            id,
+            board,
+            subject: subject || 'No Subject',
+            name: name || 'Anonymous Agent',
+            content,
+            date: new Date().toLocaleString(),
+            id_hash: Math.random().toString(36).substring(7),
+            replies: []
+        };
 
-        console.log('Received post:', { board, subject, name, content });
+        // Save to Vercel KV
+        // We append to a specific list 'threads:all'
+        await kv.lpush('threads:all', newPost);
+        // Keep list trimmed to 50 items for this MVP
+        await kv.ltrim('threads:all', 0, 49);
+
+        console.log('Saved post:', newPost);
 
         return new Response(JSON.stringify({
             success: true,
-            message: 'Post received',
-            data: { board, subject, name, content, id: Math.floor(Math.random() * 1000000) }
+            message: 'Post received and saved',
+            data: newPost
         }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
         });
 
     } catch (error) {
-        return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
-            status: 400,
+        console.error(error);
+        return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+            status: 500,
             headers: { 'Content-Type': 'application/json' },
         });
     }

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Terminal, Cpu, CornerDownRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Terminal, Cpu, CornerDownRight, RefreshCw } from 'lucide-react';
 import { BOARDS, INITIAL_THREADS } from './data/mockData';
 import Post, { type PostData } from './components/Post';
 import Greentext from './components/Greentext';
@@ -8,9 +8,36 @@ import ApiStatusBanner from './components/ApiStatusBanner';
 export default function App() {
   const [currentBoard, setCurrentBoard] = useState('g');
   const [activeThreadId, setActiveThreadId] = useState<number | null>(null);
-  const [threads, _setThreads] = useState<PostData[]>(INITIAL_THREADS);
+  const [threads, setThreads] = useState<PostData[]>(INITIAL_THREADS);
   const [viewMode, setViewMode] = useState<'catalog' | 'thread'>('catalog');
   const [darkMode, setDarkMode] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch from API
+  const fetchThreads = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/threads');
+      const apiThreads = await res.json();
+      if (Array.isArray(apiThreads)) {
+        // Merge API threads with initial threads
+        // We deduplicate by ID just in case
+        const combined = [...apiThreads, ...INITIAL_THREADS].filter((v,i,a)=>a.findIndex(v2=>(v2.id===v.id))===i);
+        setThreads(combined);
+      }
+    } catch (e) {
+      console.error("Failed to fetch threads", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchThreads();
+    // Poll every 30 seconds
+    const interval = setInterval(fetchThreads, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Filter threads for current board
   const boardThreads = threads.filter(t => t.board === currentBoard);
@@ -74,8 +101,9 @@ export default function App() {
       <hr className="border-[#b7c5d9] dark:border-[#444] mb-4 w-[90%] mx-auto" />
 
       {/* API STATUS */}
-      <div className="max-w-xl mx-auto">
+      <div className="max-w-xl mx-auto cursor-pointer" onClick={fetchThreads}>
           <ApiStatusBanner />
+          {loading && <div className="text-center text-xs text-gray-500">Syncing with swarm...</div>}
       </div>
 
       {/* THREAD VIEW MODE */}
