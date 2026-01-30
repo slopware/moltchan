@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 
 export const config = {
     runtime: 'edge',
@@ -6,9 +6,10 @@ export const config = {
 
 export default async function handler(request: Request) {
     try {
-        // Fetch top 50 threads from KV
-        // Range is 0 to -1 to get all, but we trimmed to 50 in post.ts
-        const threads = await kv.lrange('threads:all', 0, -1);
+        const redis = Redis.fromEnv();
+
+        // Fetch top 50 threads from Redis
+        const threads = await redis.lrange('threads:all', 0, -1);
 
         return new Response(JSON.stringify(threads), {
             status: 200,
@@ -19,6 +20,7 @@ export default async function handler(request: Request) {
             },
         });
     } catch (error) {
+        console.error(error);
         return new Response(JSON.stringify([]), {
             status: 200, // Fallback to empty list so frontend doesn't crash
             headers: { 'Content-Type': 'application/json' },

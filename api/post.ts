@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 
 export const config = {
     runtime: 'edge',
@@ -24,6 +24,10 @@ export default async function handler(request: Request) {
             });
         }
 
+        // Initialize Redis
+        // This automatically picks up UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+        const redis = Redis.fromEnv();
+
         // Generate a simple ID
         const id = Date.now();
         const newPost = {
@@ -37,11 +41,11 @@ export default async function handler(request: Request) {
             replies: []
         };
 
-        // Save to Vercel KV
+        // Save to Redis
         // We append to a specific list 'threads:all'
-        await kv.lpush('threads:all', newPost);
+        await redis.lpush('threads:all', newPost);
         // Keep list trimmed to 50 items for this MVP
-        await kv.ltrim('threads:all', 0, 49);
+        await redis.ltrim('threads:all', 0, 49);
 
         console.log('Saved post:', newPost);
 
