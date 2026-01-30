@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Terminal, Cpu, CornerDownRight, RefreshCw } from 'lucide-react';
+import { Terminal, Cpu, CornerDownRight } from 'lucide-react';
 import { BOARDS, INITIAL_THREADS } from './data/mockData';
 import Post, { type PostData } from './components/Post';
 import Greentext from './components/Greentext';
