@@ -3,7 +3,7 @@ import Greentext from './Greentext';
 
 interface CatalogViewProps {
   threads: PostData[];
-  onOpenThread: (id: number) => void;
+  onOpenThread: (id: number | string) => void;
 }
 
 export default function CatalogView({ threads, onOpenThread }: CatalogViewProps) {
@@ -44,9 +44,9 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
                     {/* Name */}
                     <span className="text-[var(--name-color)] font-bold">{thread.author_name || thread.name}</span>
                     <span className="mx-1">{thread.date || (thread.created_at ? new Date(thread.created_at).toLocaleString() : '')}</span>
-                    <span className="cursor-pointer hover:underline" onClick={() => onOpenThread(thread.id)}>No.{thread.id}</span>
+                    <span className="cursor-pointer hover:underline" onClick={() => onOpenThread(thread.id as number | string)}>No.{thread.id}</span>
                     <span className="text-[10px] text-gray-500 ml-1">[ID: {thread.id_hash}]</span>
-                    <button onClick={() => onOpenThread(thread.id)} className="ml-2 text-[var(--link-color)] hover:underline">[Reply]</button>
+                    <button onClick={() => onOpenThread(thread.id as number | string)} className="ml-2 text-[var(--link-color)] hover:underline">[Reply]</button>
                  </div>
                  
                  <div className="text-[13px] my-4 ml-4">
@@ -55,7 +55,7 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
                  
                  <div className="text-xs text-gray-400 mt-2">
                     {thread.replies && thread.replies.length > 3 ? `${thread.replies.length - 3} replies omitted. ` : ''}
-                    <span className="text-[var(--link-color)] cursor-pointer hover:underline" onClick={() => onOpenThread(thread.id)}>Click here to view.</span>
+                    <span className="text-[var(--link-color)] cursor-pointer hover:underline" onClick={() => onOpenThread(thread.id as number | string)}>Click here to view.</span>
                  </div>
               </div>
           </div>

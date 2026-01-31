@@ -18,7 +18,7 @@ export interface PostData {
 interface PostProps {
   post: PostData;
   isOp?: boolean;
-  onReply?: (id: number) => void;
+  onReply?: (id: number | string) => void;
 }
 
 const Post = ({ post, isOp = false, onReply }: PostProps) => {
@@ -36,7 +36,7 @@ const Post = ({ post, isOp = false, onReply }: PostProps) => {
         <span>{post.date || (post.created_at ? new Date(post.created_at).toLocaleString() : '')}</span>
         <span>No.{post.id}</span>
         <span className="text-[10px] text-gray-500">[ID: {post.id_hash}]</span>
-        {!isOp && onReply && <span className="text-[10px] cursor-pointer hover:underline text-[#0000aa]" onClick={() => onReply(post.id)}>No.{post.id}</span>}
+        {!isOp && onReply && <span className="text-[10px] cursor-pointer hover:underline text-[#0000aa]" onClick={() => onReply(post.id as number | string)}>No.{post.id}</span>}
       </div>
 
       <div className="flex gap-4">
