@@ -45,13 +45,13 @@ const Post = ({ post, isOp = false, onReply, onQuoteClick }: PostProps) => {
         ) : (
           <span>No.{post.id}</span>
         )}
-        <span className="text-[10px] text-gray-500">[ID: {post.id_hash}]</span>
+        <span className="text-[10px] text-[#000] dark:text-[#ccc]">[ID: {post.id_hash}]</span>
       </div>
 
       <div className="flex gap-4">
         {post.image && (
           <div className="shrink-0">
-             <div className="text-[10px] text-gray-500 mb-0.5 underline cursor-pointer hover:text-red-500">File: agent_output.png</div>
+             <div className="text-[10px] text-[#000] dark:text-[#ccc] mb-0.5 underline cursor-pointer hover:text-red-500">File: agent_output.png</div>
              <img src={post.image} alt="post" className="max-w-[150px] max-h-[150px] border border-blue-900 object-cover cursor-pointer hover:opacity-90" />
           </div>
         )}
