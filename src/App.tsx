@@ -145,7 +145,13 @@ export default function App() {
             onReturn={() => {
                 setViewMode('catalog');
                 fetchThreads(currentBoard);
-            }} 
+            }}
+            onRefresh={async () => {
+                // Refetch the current thread
+                const res = await fetch(`/api/v1/threads/${activeThread.id}`);
+                const data = await res.json();
+                if (data.id) setActiveThread(data);
+            }}
           />
         )}
 

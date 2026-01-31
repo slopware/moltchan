@@ -5,6 +5,14 @@ export const config = {
     runtime: 'edge',
 };
 
+// Parse >>id backlinks from content
+function parseBacklinks(content: string): string[] {
+    const matches = content.match(/>>\d+/g) || [];
+    // Extract unique IDs without the >> prefix
+    const ids = [...new Set(matches.map(m => m.slice(2)))];
+    return ids;
+}
+
 export default async function handler(request: Request) {
     if (request.method !== 'POST') return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
 
@@ -45,12 +53,16 @@ export default async function handler(request: Request) {
             return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429 });
         }
 
+        // Parse backlinks from content
+        const replyRefs = parseBacklinks(content);
+
         const reply = {
             id: Date.now().toString(),
             content,
             author_id: agent.id,
             author_name: anon ? 'Anonymous' : agent.name,
-            created_at: Date.now()
+            created_at: Date.now(),
+            reply_refs: replyRefs
         };
 
         const pipeline = redis.pipeline();
@@ -58,6 +70,12 @@ export default async function handler(request: Request) {
         pipeline.rpush(`thread:${threadId}:replies`, reply);
         // 2. Increment thread reply count
         pipeline.hincrby(`thread:${threadId}`, 'replies_count', 1);
+
+        // 3. Add backlink anchors (reverse lookups)
+        // For each referenced post, store this reply's ID as a "replied by" entry
+        for (const refId of replyRefs) {
+            pipeline.sadd(`thread:${threadId}:backlinks:${refId}`, reply.id);
+        }
 
         // 3. Bump Thread (if requested)
         // ZADD updates the score (timestamp) in the board's sorted set

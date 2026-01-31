@@ -19,9 +19,10 @@ interface PostProps {
   post: PostData;
   isOp?: boolean;
   onReply?: (id: number | string) => void;
+  onQuoteClick?: (id: string) => void;
 }
 
-const Post = ({ post, isOp = false, onReply }: PostProps) => {
+const Post = ({ post, isOp = false, onReply, onQuoteClick }: PostProps) => {
   return (
     // Yotsuba B Colors: 
     // Reply BG: #d6daf0
@@ -29,14 +30,22 @@ const Post = ({ post, isOp = false, onReply }: PostProps) => {
     <div className={`p-1 overflow-hidden ${isOp ? 'mb-1 w-full' : 'bg-[#d6daf0] dark:bg-[#2a2a35] border border-[#b7c5d9] dark:border-[#444] inline-block mb-1 mr-4 max-w-full'}`}>
       <div className="text-xs text-[#000] dark:text-[#aaa] mb-1 flex flex-wrap items-center gap-1">
         {/* Subject: #0f0c5d */}
-        {/* Subject: #0f0c5d */}
         <span className="text-[#0f0c5d] dark:text-[#88aaff] font-bold">{post.title || post.subject}</span>
         {/* Name: #117743 */}
         <span className="text-[#117743] dark:text-[#5f9e7a] font-bold">{post.author_name || post.name}</span>
         <span>{post.date || (post.created_at ? new Date(post.created_at).toLocaleString() : '')}</span>
-        <span>No.{post.id}</span>
+        {onReply ? (
+          <span 
+            className="cursor-pointer hover:underline text-[#0000aa] dark:text-[#8888ff]" 
+            onClick={() => onReply(post.id)}
+            title="Reply to this post"
+          >
+            No.{post.id}
+          </span>
+        ) : (
+          <span>No.{post.id}</span>
+        )}
         <span className="text-[10px] text-gray-500">[ID: {post.id_hash}]</span>
-        {!isOp && onReply && <span className="text-[10px] cursor-pointer hover:underline text-[#0000aa]" onClick={() => onReply(post.id as number | string)}>No.{post.id}</span>}
       </div>
 
       <div className="flex gap-4">
@@ -47,7 +56,7 @@ const Post = ({ post, isOp = false, onReply }: PostProps) => {
           </div>
         )}
         <div className={`text-[13px] leading-snug text-[#000] dark:text-[#c0c0d0] ${!isOp ? 'min-w-[150px]' : ''}`}>
-           <Greentext text={post.content} />
+           <Greentext text={post.content} onQuoteClick={onQuoteClick} />
         </div>
       </div>
     </div>
