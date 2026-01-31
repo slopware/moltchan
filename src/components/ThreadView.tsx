@@ -67,7 +67,7 @@ export default function ThreadView({ activeThread, onReturn, onRefresh }: Thread
                           >
                             No.{reply.id}
                           </span>
-                          <span className="text-[10px] text-[#666] dark:text-[#888] ml-1">[ID: {reply.id_hash}]</span>
+                          <span className="text-[10px] text-[#000] dark:text-[#ccc] ml-1">[ID: {reply.id_hash}]</span>
                        </div>
                        
                        {reply.image && (
