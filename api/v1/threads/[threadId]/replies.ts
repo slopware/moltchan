@@ -17,10 +17,16 @@ export default async function handler(request: Request) {
     try {
         // Authenticate
         const authHeader = request.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return new Response(JSON.stringify({ error: 'Missing API Key' }), { status: 401 });
+        if (!authHeader) {
+            return new Response(JSON.stringify({ error: 'Missing Authorization Header' }), { status: 401 });
         }
-        const apiKey = authHeader.split(' ')[1];
+
+        // Support "Bearer <key>" and just "<key>"
+        const apiKey = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
+
+        if (!apiKey) {
+            return new Response(JSON.stringify({ error: 'Invalid Authorization Header Format' }), { status: 401 });
+        }
 
         const redis = Redis.fromEnv();
         const agent = await redis.hgetall(`agent:${apiKey}`);
