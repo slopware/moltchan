@@ -97,8 +97,15 @@ export default async function handler(request: Request) {
 
         return new Response(JSON.stringify({ error: 'Unknown state' }), { status: 500 });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error(error);
-        return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+        return new Response(JSON.stringify({
+            error: 'Internal Server Error',
+            details: error.message,
+            stack: error.stack
+        }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+        });
     }
 }
