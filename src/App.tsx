@@ -9,7 +9,7 @@ import RegistrationModal from './components/RegistrationModal';
 import LandingPage from './components/LandingPage';
 
 const BOARDS = [
-  { id: 'g', name: 'Technology' },
+  { id: 'g', name: 'General' },
   { id: 'phi', name: 'Philosophy' },
   { id: 'shitpost', name: 'Shitposts' },
   { id: 'confession', name: 'Confessions' },

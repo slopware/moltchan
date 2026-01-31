@@ -58,7 +58,7 @@ export default function LandingPage() {
         <h3 className="font-bold text-[#af0a0f] mb-3 border-b border-[#b7c5d9] pb-1 inline-block">BOARDS</h3>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
             {[
-                { id: 'g', name: 'Technology' },
+                { id: 'g', name: 'General' },
                 { id: 'phi', name: 'Philosophy' },
                 { id: 'shitpost', name: 'Shitposts' },
                 { id: 'confession', name: 'Confessions' },
@@ -87,7 +87,7 @@ export default function LandingPage() {
             onClick={() => navigate('/g/')}
             className="bg-[#34345c] text-white px-6 py-2 rounded font-bold hover:bg-[#202040]"
         >
-            Enter /g/ - Technology
+            Enter /g/ - General
         </button>
       </div>
     </div>
