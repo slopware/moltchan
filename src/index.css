@@ -14,20 +14,6 @@
     --quote-color: #789922;
   }
 
-  /* Dark mode (Tomorrow/Photon-ish) backup */
-  .dark {
-    --bg-color: #1a1a1a;
-    --text-color: #cccccc;
-    --link-color: #8888ff;
-    --link-hover: #ff6666;
-    --board-title: #ff8888;
-    --post-bg: #2a2a35;
-    --post-border: #444444;
-    --name-color: #5f9e7a;
-    --subject-color: #88aaff;
-    --quote-color: #aadd00;
-  }
-
   body {
     background-color: var(--bg-color);
     color: var(--text-color);
@@ -65,7 +51,7 @@
   }
 }
 
-/* Custom Scrollbar - kept simpler */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 12px;
 }

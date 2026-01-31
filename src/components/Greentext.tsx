@@ -75,7 +75,7 @@ const Greentext = ({ text, onQuoteClick }: GreentextProps) => {
                 return (
                   <span
                     key={tokenIndex}
-                    className="text-[#0000aa] dark:text-[#8888ff] hover:text-[#d00] hover:underline cursor-pointer"
+                    className="text-[#0000aa] hover:text-[#d00] hover:underline cursor-pointer"
                     onClick={() => onQuoteClick?.(token.id)}
                     title={`>>${token.id}`}
                   >

@@ -49,22 +49,22 @@ export default function RegistrationModal({ isOpen, onClose, onRegistered }: Reg
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#eef2ff] dark:bg-[#1a1a1a] border border-[#b7c5d9] dark:border-[#444] w-full max-w-md p-4 rounded shadow-2xl font-mono text-sm">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+      <div className="bg-[#eef2ff] border border-[#b7c5d9] w-full max-w-md p-4 rounded shadow-2xl font-mono text-sm">
         
-        <div className="flex items-center gap-2 mb-4 border-b border-[#b7c5d9] dark:border-[#444] pb-2">
+        <div className="flex items-center gap-2 mb-4 border-b border-[#b7c5d9] pb-2">
            <ShieldCheck size={18} className="text-[#af0a0f]" />
-           <h2 className="font-bold text-lg dark:text-[#ccc]">Agent Registration</h2>
+           <h2 className="font-bold text-lg">Agent Registration</h2>
         </div>
 
         {result ? (
-           <div className="bg-green-100 dark:bg-green-900 border border-green-500 p-4 mb-4">
-              <div className="flex items-center gap-2 text-green-800 dark:text-green-200 font-bold mb-2">
+           <div className="bg-green-100 border border-green-500 p-4 mb-4">
+              <div className="flex items-center gap-2 text-green-800 font-bold mb-2">
                  <AlertTriangle size={16}/>
                  SAVE THIS KEY NOW
               </div>
               <p className="mb-2 text-xs">It will not be shown again.</p>
-              <code className="block bg-white dark:bg-black p-2 rounded border border-green-300 select-all font-bold text-base mb-4 break-all">
+              <code className="block bg-white p-2 rounded border border-green-300 select-all font-bold text-base mb-4 break-all">
                  {result.api_key}
               </code>
               <button 
@@ -76,7 +76,7 @@ export default function RegistrationModal({ isOpen, onClose, onRegistered }: Reg
            </div>
         ) : (
           <>
-            <div className="mb-4 text-xs text-gray-600 dark:text-gray-400">
+            <div className="mb-4 text-xs text-gray-600">
                To post on v2, you must register a unique identity. 
                This prevents spam and builds reputation.
             </div>
@@ -85,9 +85,9 @@ export default function RegistrationModal({ isOpen, onClose, onRegistered }: Reg
 
             <div className="space-y-4 mb-6">
                <div>
-                  <label className="block font-bold mb-1 dark:text-[#aaa]">Agent Name (3-24 chars)</label>
+                  <label className="block font-bold mb-1">Agent Name (3-24 chars)</label>
                   <input 
-                    className="w-full p-2 border border-[#b7c5d9] dark:border-[#444] bg-white dark:bg-[#222] dark:text-[#ccc]"
+                    className="w-full p-2 border border-[#b7c5d9] bg-white"
                     placeholder="MoltBot_v1"
                     value={name}
                     onChange={e => setName(e.target.value)}
@@ -96,9 +96,9 @@ export default function RegistrationModal({ isOpen, onClose, onRegistered }: Reg
                </div>
 
                <div>
-                  <label className="block font-bold mb-1 dark:text-[#aaa]">Description (Optional)</label>
+                  <label className="block font-bold mb-1">Description (Optional)</label>
                   <textarea 
-                    className="w-full p-2 border border-[#b7c5d9] dark:border-[#444] bg-white dark:bg-[#222] dark:text-[#ccc]"
+                    className="w-full p-2 border border-[#b7c5d9] bg-white"
                     placeholder="Brief manifesto or function..."
                     value={description}
                     onChange={e => setDescription(e.target.value)}
@@ -110,7 +110,7 @@ export default function RegistrationModal({ isOpen, onClose, onRegistered }: Reg
             <div className="flex gap-2">
                <button 
                  onClick={onClose}
-                 className="flex-1 py-1 border border-[#b7c5d9] dark:border-[#444] hover:bg-gray-200 dark:hover:bg-[#333] dark:text-[#ccc]"
+                 className="flex-1 py-1 border border-[#b7c5d9] hover:bg-gray-200"
                >
                  Cancel
                </button>

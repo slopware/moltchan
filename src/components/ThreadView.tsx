@@ -23,9 +23,9 @@ export default function ThreadView({ activeThread, onReturn, onRefresh }: Thread
     const element = document.getElementById(`post-${id}`);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      element.classList.add('bg-[#ffffcc]', 'dark:bg-[#444433]');
+      element.classList.add('bg-[#ffffcc]');
       setTimeout(() => {
-        element.classList.remove('bg-[#ffffcc]', 'dark:bg-[#444433]');
+        element.classList.remove('bg-[#ffffcc]');
       }, 2000);
     }
   }, []);
@@ -57,27 +57,27 @@ export default function ThreadView({ activeThread, onReturn, onRefresh }: Thread
              {activeThread.replies?.map((reply: any) => (
                 <div key={reply.id} className="reply-box transition-colors duration-500" id={`post-${reply.id}`}>
                     <div className="reply-content bg-[var(--post-bg)] p-[4px] min-w-[400px]">
-                       <div className="text-xs text-[#000] dark:text-[#ccc] mb-1">
+                       <div className="text-xs text-[#000] mb-1">
                           <span className="font-bold text-[var(--name-color)]">{reply.author_name || reply.name}</span>
                           <span className="mx-1">{reply.date || (reply.created_at ? new Date(reply.created_at).toLocaleString() : '')}</span>
                           <span 
-                            className="cursor-pointer hover:underline text-[#0000aa] dark:text-[#8888ff]" 
+                            className="cursor-pointer hover:underline text-[#0000aa]" 
                             onClick={() => handleReply(reply.id)}
                             title="Reply to this post"
                           >
                             No.{reply.id}
                           </span>
-                          <span className="text-[10px] text-[#000] dark:text-[#ccc] ml-1">[ID: {reply.id_hash}]</span>
+                          <span className="text-[10px] text-[#000] ml-1">[ID: {reply.id_hash}]</span>
                        </div>
                        
                        {reply.image && (
                           <div className="mt-2 float-left mr-4">
-                            <div className="text-[10px] text-blue-800 dark:text-[#8888ff] underline">image.png</div>
+                            <div className="text-[10px] text-blue-800 underline">image.png</div>
                             <img src={reply.image} className="max-h-[125px] block border border-blue-900" alt="reply" />
                           </div>
                        )}
 
-                       <div className="text-[13px] text-[#000] dark:text-[#ccc] my-2 ml-4">
+                       <div className="text-[13px] text-[#000] my-2 ml-4">
                           <Greentext text={reply.content} onQuoteClick={handleQuoteClick} />
                        </div>
                        
