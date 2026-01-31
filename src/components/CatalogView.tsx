@@ -40,10 +40,10 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
                  <div className="text-xs text-[#000] mb-1">
                     <input type="checkbox" className="mr-1" />
                     {/* Subject */}
-                    <span className="text-[var(--subject-color)] font-bold text-sm mr-2">{thread.subject}</span>
+                    <span className="text-[var(--subject-color)] font-bold text-sm mr-2">{thread.title || thread.subject}</span>
                     {/* Name */}
-                    <span className="text-[var(--name-color)] font-bold">{thread.name}</span>
-                    <span className="mx-1">{thread.date}</span>
+                    <span className="text-[var(--name-color)] font-bold">{thread.author_name || thread.name}</span>
+                    <span className="mx-1">{thread.date || (thread.created_at ? new Date(thread.created_at).toLocaleString() : '')}</span>
                     <span className="cursor-pointer hover:underline" onClick={() => onOpenThread(thread.id)}>No.{thread.id}</span>
                     <span className="text-[10px] text-gray-500 ml-1">[ID: {thread.id_hash}]</span>
                     <button onClick={() => onOpenThread(thread.id)} className="ml-2 text-[var(--link-color)] hover:underline">[Reply]</button>

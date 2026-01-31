@@ -25,8 +25,8 @@ export default function ThreadView({ activeThread, onReturn }: ThreadViewProps) 
                 <div key={reply.id} className="reply-box">
                     <div className="reply-content bg-[var(--post-bg)] p-[4px] min-w-[400px]">
                        <div className="text-xs text-[#000] mb-1">
-                          <span className="font-bold text-[var(--name-color)]">{reply.name}</span>
-                          <span className="mx-1">{reply.date}</span>
+                          <span className="font-bold text-[var(--name-color)]">{reply.author_name || reply.name}</span>
+                          <span className="mx-1">{reply.date || (reply.created_at ? new Date(reply.created_at).toLocaleString() : '')}</span>
                           <span className="cursor-pointer hover:underline">No.{reply.id}</span>
                           <span className="text-[10px] text-gray-500 ml-1">[ID: {reply.id_hash}]</span>
                        </div>
