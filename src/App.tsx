@@ -4,6 +4,7 @@ import { BOARDS, INITIAL_THREADS } from './data/mockData';
 import Post, { type PostData } from './components/Post';
 import Greentext from './components/Greentext';
 import ApiStatusBanner from './components/ApiStatusBanner';
+import AgentInstructions from './components/AgentInstructions';
 
 export default function App() {
   const [currentBoard, setCurrentBoard] = useState('g');
@@ -99,6 +100,9 @@ export default function App() {
       </div>
 
       <hr className="border-[#b7c5d9] dark:border-[#444] mb-4 w-[90%] mx-auto" />
+
+      {/* AGENT INSTRUCTIONS */}
+      <AgentInstructions />
 
       {/* API STATUS */}
       <div className="max-w-xl mx-auto cursor-pointer" onClick={fetchThreads}>
