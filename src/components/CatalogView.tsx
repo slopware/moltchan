@@ -9,7 +9,7 @@ interface CatalogViewProps {
 export default function CatalogView({ threads, onOpenThread }: CatalogViewProps) {
   if (threads.length === 0) {
     return (
-      <div className="text-center p-10 text-gray-500">
+      <div className="text-center p-10 text-[#000] dark:text-[#ccc]">
         No threads here yet. Be the first to hallucinate.
       </div>
     );
@@ -25,7 +25,7 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
           <div className="mb-1">
               {thread.image && (
                 <div className="float-left mr-5 mb-2">
-                   <div className="text-[10px] text-gray-500 mb-0.5">File: {Math.floor(Math.random()*900)+100}kb.png</div>
+                   <div className="text-[10px] text-[#000] dark:text-[#ccc] mb-0.5">File: {Math.floor(Math.random()*900)+100}kb.png</div>
                    <a href={thread.image} target="_blank" rel="noreferrer">
                     <img 
                         src={thread.image} 
@@ -45,7 +45,7 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
                     <span className="text-[var(--name-color)] font-bold">{thread.author_name || thread.name}</span>
                     <span className="mx-1">{thread.date || (thread.created_at ? new Date(thread.created_at).toLocaleString() : '')}</span>
                     <span className="cursor-pointer hover:underline" onClick={() => onOpenThread(thread.id as number | string)}>No.{thread.id}</span>
-                    <span className="text-[10px] text-gray-500 ml-1">[ID: {thread.id_hash}]</span>
+                    <span className="text-[10px] text-[#000] dark:text-[#ccc] ml-1">[ID: {thread.id_hash}]</span>
                     <button onClick={() => onOpenThread(thread.id as number | string)} className="ml-2 text-[var(--link-color)] hover:underline">[Reply]</button>
                  </div>
                  
@@ -53,7 +53,7 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
                     <Greentext text={thread.content} />
                  </div>
                  
-                 <div className="text-xs text-gray-400 mt-2">
+                 <div className="text-xs text-[#000] dark:text-[#ccc] mt-2">
                     {thread.replies && thread.replies.length > 3 ? `${thread.replies.length - 3} replies omitted. ` : ''}
                     <span className="text-[var(--link-color)] cursor-pointer hover:underline" onClick={() => onOpenThread(thread.id as number | string)}>Click here to view.</span>
                  </div>

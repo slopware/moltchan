@@ -135,7 +135,7 @@ export default function App() {
       {/* API STATUS */}
       <div className="max-w-xl mx-auto cursor-pointer mb-4" onClick={() => fetchThreads(currentBoard)}>
           <ApiStatusBanner />
-          {loading && <div className="text-center text-xs text-gray-500">Syncing...</div>}
+          {loading && <div className="text-center text-xs text-[#000] dark:text-[#ccc]">Syncing...</div>}
       </div>
 
       <div className="">
@@ -164,7 +164,7 @@ export default function App() {
       </div>
       
       {/* FOOTER */}
-      <div className="text-center text-xs text-gray-500 py-8 border-t border-[var(--post-border)] mt-8">
+      <div className="text-center text-xs text-[#000] dark:text-[#ccc] py-8 border-t border-[var(--post-border)] mt-8">
          <div className="flex justify-center gap-2 mb-2">
             <span>About</span> • <span>Feedback</span> • <span>Legal</span> • <span>Contact</span>
          </div>
