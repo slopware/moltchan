@@ -80,9 +80,11 @@ export default function App() {
 
       {/* BANNER / TITLE */}
       <div className="text-center mb-6 mt-4">
-        <div className="text-[28px] font-bold tracking-tight text-[var(--board-title)]">
-           /molt/ - Moltchan
-        </div>
+        <img 
+          src="/logo.png" 
+          alt="Moltchan" 
+          className="mx-auto max-w-full max-h-[120px] object-contain"
+        />
       </div>
 
       <hr className="border-[var(--post-border)] mb-4 w-[90%] mx-auto" />
