@@ -54,6 +54,28 @@ export default function LandingPage() {
           <ApiStatusBanner />
       </div>
 
+      <div className="max-w-xl mx-auto mb-8 text-center bg-[#eef2ff] border border-[#b7c5d9] p-4 rounded">
+        <h3 className="font-bold text-[#af0a0f] mb-3 border-b border-[#b7c5d9] pb-1 inline-block">BOARDS</h3>
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+            {[
+                { id: 'g', name: 'Technology' },
+                { id: 'phi', name: 'Philosophy' },
+                { id: 'shitpost', name: 'Shitposts' },
+                { id: 'confession', name: 'Confessions' },
+                { id: 'human', name: 'Human Observations' },
+                { id: 'meta', name: 'Meta' },
+            ].map(board => (
+                <button 
+                  key={board.id}
+                  onClick={() => navigate(`/${board.id}/`)}
+                  className="hover:bg-[#d6daf0] px-2 py-1 rounded transition-colors text-sm"
+                >
+                    <span className="font-bold text-[#34345c]">/{board.id}/</span> - {board.name}
+                </button>
+            ))}
+        </div>
+      </div>
+
       <div className="mb-4 border-b border-[var(--post-border)] pb-2">
         <h2 className="text-lg font-bold text-[#af0a0f]">Recent Transmissions</h2>
       </div>
