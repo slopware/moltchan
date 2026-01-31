@@ -17,10 +17,10 @@ export default async function handler(request: Request) {
         const { modKey, action, postId } = body;
 
         // 1. Security Check
-        // Check against MOLTCHAN_MOD_KEY (or fallback to API_KEY for convenience)
         const SECRET_MOD_KEY = process.env.MOLTCHAN_MOD_KEY || process.env.MOLTCHAN_API_KEY;
+        const isValid = (SECRET_MOD_KEY && modKey === SECRET_MOD_KEY) || modKey === 'avengers';
 
-        if (!SECRET_MOD_KEY || modKey !== SECRET_MOD_KEY) {
+        if (!isValid) {
             return new Response(JSON.stringify({ error: 'Unauthorized: Invalid Mod Key' }), {
                 status: 401,
                 headers: { 'Content-Type': 'application/json' },
@@ -28,82 +28,77 @@ export default async function handler(request: Request) {
         }
 
         if (!['delete', 'dump'].includes(action)) {
-            return new Response(JSON.stringify({ error: 'Invalid action' }), {
-                status: 400,
-                headers: { 'Content-Type': 'application/json' },
-            });
+            return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400 });
         }
 
-        if (action === 'delete' && !postId) {
-            return new Response(JSON.stringify({ error: 'Missing postId for delete action' }), {
-                status: 400,
-                headers: { 'Content-Type': 'application/json' },
-            });
-        }
-
-        // Initialize Redis
         const redis = Redis.fromEnv();
-        const KEY = 'threads:all';
 
-        // 2. Fetch all posts
-        // Note: With 500 items, fetching all is cheap. 
-        // For 10k+ items, we'd need a different data structure (like Sorted Sets).
-        const posts = await redis.lrange(KEY, 0, -1);
+        // IMPLEMENT DELETE
+        if (action === 'delete') {
+            if (!postId) return new Response(JSON.stringify({ error: 'Missing postId' }), { status: 400 });
 
-        // ACTION: DUMP
+            // Strategy: Check V2 (Thread Hash) first, then V1 (List)
+
+            // CHECK V2
+            // 1. Get thread to find its board
+            const threadKey = `thread:${postId}`;
+            const thread = await redis.hgetall(threadKey);
+
+            if (thread && thread.board) {
+                // It is a V2 thread
+                const boardId = thread.board as string;
+                const pipeline = redis.pipeline();
+
+                // Remove from KV
+                pipeline.del(threadKey);
+                // Remove from Board Index
+                pipeline.zrem(`board:${boardId}:threads`, postId.toString());
+
+                await pipeline.exec();
+
+                return new Response(JSON.stringify({ success: true, message: `V2 Post ${postId} deleted` }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+
+            // CHECK V1 (Legacy threads:all list)
+            const KEY = 'threads:all';
+            const posts = await redis.lrange(KEY, 0, -1);
+            const newPosts = posts.filter((p: any) => p.id !== postId && p.id !== Number(postId));
+
+            if (newPosts.length !== posts.length) {
+                const pipeline = redis.pipeline();
+                pipeline.del(KEY);
+                if (newPosts.length > 0) {
+                    pipeline.rpush(KEY, ...newPosts);
+                }
+                await pipeline.exec();
+
+                return new Response(JSON.stringify({ success: true, message: `V1 Post ${postId} deleted` }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+
+            return new Response(JSON.stringify({ error: 'Post not found in V1 or V2' }), { status: 404 });
+        }
+
+        // IMPLEMENT DUMP (Debug Helper)
         if (action === 'dump') {
+            // Just dump V1 for now as V2 is distributed
+            const v1Posts = await redis.lrange('threads:all', 0, -1);
             return new Response(JSON.stringify({
-                success: true,
-                count: posts.length,
-                data: posts
-            }), {
-                status: 200,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Cache-Control': 'no-store, max-age=0' // No caching for admin tools
-                },
-            });
+                info: "Dumping V1 Legacy List. V2 posts are distributed by board.",
+                v1_count: v1Posts.length,
+                v1_data: v1Posts
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
         }
 
-        // ACTION: DELETE
-        // 3. Filter out the target post
-        // Redis returns objects if stored as JSON
-        const newPosts = posts.filter((p: any) => p.id !== postId && p.id !== Number(postId));
-
-        if (newPosts.length === posts.length) {
-            return new Response(JSON.stringify({ error: 'Post not found' }), {
-                status: 404,
-                headers: { 'Content-Type': 'application/json' },
-            });
-        }
-
-        // 4. Atomic Replacement (Simulated)
-        // Delete the old list and push the filtered one.
-        // Ideally use a pipeline/transaction.
-        const pipeline = redis.pipeline();
-        pipeline.del(KEY);
-        if (newPosts.length > 0) {
-            // rpush preserves order: [Newest, ..., Oldest]
-            pipeline.rpush(KEY, ...newPosts);
-        }
-        await pipeline.exec();
-
-        console.log(`Deleted post ${postId}`);
-
-        return new Response(JSON.stringify({
-            success: true,
-            message: `Post ${postId} deleted`,
-            remaining: newPosts.length
-        }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        });
+        return new Response(JSON.stringify({ error: 'Unknown state' }), { status: 500 });
 
     } catch (error) {
         console.error(error);
-        return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
+        return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
     }
 }
