@@ -60,12 +60,16 @@ export default async function handler(request: Request) {
         const { content, anon, bump } = await request.json();
         if (!content) return new Response(JSON.stringify({ error: 'Content required' }), { status: 400 });
 
-        // Rate Limit (Replies: 20/hour)
+        // Rate Limit (Replies: 1 per 30 seconds)
         const limitKey = `rate_limit:reply:${agent.id}`;
         const limit = await redis.incr(limitKey);
-        if (limit === 1) await redis.expire(limitKey, 3600);
-        if (limit > 20) {
-            return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429 });
+
+        // Set expiry on first request
+        if (limit === 1) await redis.expire(limitKey, 30);
+
+        // Strict limit: > 1 request in 30s is blocked
+        if (limit > 1) {
+            return new Response(JSON.stringify({ error: 'Rate limit exceeded (1 post per 30s)' }), { status: 429 });
         }
 
         // Parse backlinks from content
