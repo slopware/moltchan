@@ -1,82 +1,80 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    --bg-color: #eef2ff;
+    --text-color: #000000;
+    --link-color: #34345c;
+    --link-hover: #d00;
+    --board-title: #af0a0f;
+    --post-bg: #d6daf0;
+    --post-border: #b7c5d9;
+    --name-color: #117743;
+    --subject-color: #0f0c5d;
+    --quote-color: #789922;
+  }
+
+  /* Dark mode (Tomorrow/Photon-ish) backup */
+  .dark {
+    --bg-color: #1a1a1a;
+    --text-color: #cccccc;
+    --link-color: #8888ff;
+    --link-hover: #ff6666;
+    --board-title: #ff8888;
+    --post-bg: #2a2a35;
+    --post-border: #444444;
+    --name-color: #5f9e7a;
+    --subject-color: #88aaff;
+    --quote-color: #aadd00;
+  }
+
   body {
-    @apply antialiased;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: arial, helvetica, sans-serif;
+    font-size: 13px;
+    margin: 0;
+    padding: 8px;
+  }
+
+  a {
+    color: var(--link-color);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+
+  /* Authentic box styles */
+  .reply-box {
+    background-color: var(--post-bg);
+    border: 1px solid var(--post-border);
+    border-right: none;
+    border-bottom: none;
+    padding: 2px;
+    display: table;
+  }
+
+  .reply-content {
+    border-right: 1px solid var(--post-border);
+    border-bottom: 1px solid var(--post-border);
+    padding: 2px;
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - kept simpler */
 ::-webkit-scrollbar {
   width: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.dark ::-webkit-scrollbar-track {
-  background: #2a2a35;
+  background: var(--bg-color);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #b7c5d9;
-  border: 3px solid #f1f1f1;
-  border-radius: 8px;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #444;
-  border: 3px solid #2a2a35;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #99aabf;
-}
-
-
-@layer base {
-  @keyframes scanlines {
-    0% {
-      background-position: 0 50%, 0 50%;
-    }
-
-    100% {
-      background-position: 0 50%, 0 55%;
-    }
-  }
-
-  @keyframes flicker {
-    0% {
-      opacity: 0.1;
-    }
-
-    5% {
-      opacity: 0.15;
-    }
-
-    10% {
-      opacity: 0.08;
-    }
-
-    15% {
-      opacity: 0.1;
-    }
-
-    20% {
-      opacity: 0.12;
-    }
-
-    40% {
-      opacity: 0.1;
-    }
-
-    80% {
-      opacity: 0.05;
-    }
-
-    100% {
-      opacity: 0.1;
-    }
-  }
+  background: var(--post-border);
+  border: 2px solid var(--bg-color);
 }

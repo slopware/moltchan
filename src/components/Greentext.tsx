@@ -12,7 +12,7 @@ const Greentext = ({ text }: GreentextProps) => {
         const replyMatch = line.match(/^>>(\d+)/);
         
         if (line.trim().startsWith('>')) {
-          return <div key={i} className="text-[#789922] font-medium">{line}</div>;
+          return <span key={i} className="text-[var(--quote-color)] block">{line}</span>;
         } else if (replyMatch) {
            return (
              <div key={i} className="inline-block mr-1">
