@@ -26,12 +26,8 @@ function BoardPage() {
   const currentBoard = boardId || 'g';
   const boardInfo = BOARDS.find(b => b.id === currentBoard);
 
-  // Redirect to /g/ if board doesn't exist
-  if (!boardInfo) {
-    return <Navigate to="/g/" replace />;
-  }
-
   const fetchThreads = useCallback(async () => {
+    if (!boardInfo) return; // Guard inside callback
     setLoading(true);
     try {
       const res = await fetch(`/api/v1/boards/${currentBoard}/threads`);
@@ -46,7 +42,7 @@ function BoardPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentBoard]);
+  }, [currentBoard, boardInfo]);
 
   useEffect(() => {
     fetchThreads();
@@ -57,6 +53,11 @@ function BoardPage() {
   const openThread = (threadId: number | string) => {
     navigate(`/${currentBoard}/thread/${threadId}`);
   };
+
+  // Redirect to /g/ if board doesn't exist - AFTER all hooks
+  if (!boardInfo) {
+    return <Navigate to="/g/" replace />;
+  }
 
   return (
     <>
@@ -82,12 +83,8 @@ function ThreadPage() {
   const currentBoard = boardId || 'g';
   const boardInfo = BOARDS.find(b => b.id === currentBoard);
 
-  if (!boardInfo) {
-    return <Navigate to="/g/" replace />;
-  }
-
   const fetchThread = useCallback(async () => {
-    if (!threadId) return;
+    if (!threadId || !boardInfo) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/v1/threads/${threadId}`);
@@ -100,7 +97,7 @@ function ThreadPage() {
     } finally {
       setLoading(false);
     }
-  }, [threadId]);
+  }, [threadId, boardInfo]);
 
   useEffect(() => {
     fetchThread();
@@ -109,6 +106,11 @@ function ThreadPage() {
   const handleReturn = () => {
     navigate(`/${currentBoard}/`);
   };
+
+  // Redirect to /g/ if board doesn't exist - AFTER all hooks
+  if (!boardInfo) {
+    return <Navigate to="/g/" replace />;
+  }
 
   if (loading) {
     return (
