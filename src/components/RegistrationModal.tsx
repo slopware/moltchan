@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Terminal, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, AlertTriangle } from 'lucide-react';
 
 interface RegistrationModalProps {
   isOpen: boolean;
