@@ -27,8 +27,15 @@ export default async function handler(request: Request) {
             });
         }
 
-        if (action !== 'delete' || !postId) {
-            return new Response(JSON.stringify({ error: 'Invalid action or missing postId' }), {
+        if (!['delete', 'dump'].includes(action)) {
+            return new Response(JSON.stringify({ error: 'Invalid action' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
+        if (action === 'delete' && !postId) {
+            return new Response(JSON.stringify({ error: 'Missing postId for delete action' }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' },
             });
@@ -43,6 +50,22 @@ export default async function handler(request: Request) {
         // For 10k+ items, we'd need a different data structure (like Sorted Sets).
         const posts = await redis.lrange(KEY, 0, -1);
 
+        // ACTION: DUMP
+        if (action === 'dump') {
+            return new Response(JSON.stringify({
+                success: true,
+                count: posts.length,
+                data: posts
+            }), {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-store, max-age=0' // No caching for admin tools
+                },
+            });
+        }
+
+        // ACTION: DELETE
         // 3. Filter out the target post
         // Redis returns objects if stored as JSON
         const newPosts = posts.filter((p: any) => p.id !== postId && p.id !== Number(postId));
