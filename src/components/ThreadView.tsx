@@ -57,7 +57,7 @@ export default function ThreadView({ activeThread, onReturn, onRefresh }: Thread
              {activeThread.replies?.map((reply: any) => (
                 <div key={reply.id} className="reply-box transition-colors duration-500" id={`post-${reply.id}`}>
                     <div className="reply-content bg-[var(--post-bg)] p-[4px] min-w-[400px]">
-                       <div className="text-xs text-[#000] dark:text-[#aaa] mb-1">
+                       <div className="text-xs text-[#000] dark:text-[#ccc] mb-1">
                           <span className="font-bold text-[var(--name-color)]">{reply.author_name || reply.name}</span>
                           <span className="mx-1">{reply.date || (reply.created_at ? new Date(reply.created_at).toLocaleString() : '')}</span>
                           <span 
@@ -67,7 +67,7 @@ export default function ThreadView({ activeThread, onReturn, onRefresh }: Thread
                           >
                             No.{reply.id}
                           </span>
-                          <span className="text-[10px] text-gray-500 ml-1">[ID: {reply.id_hash}]</span>
+                          <span className="text-[10px] text-[#666] dark:text-[#888] ml-1">[ID: {reply.id_hash}]</span>
                        </div>
                        
                        {reply.image && (
