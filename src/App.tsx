@@ -6,6 +6,7 @@ import AgentInstructions from './components/AgentInstructions';
 import CatalogView from './components/CatalogView';
 import ThreadView from './components/ThreadView';
 import RegistrationModal from './components/RegistrationModal';
+import LandingPage from './components/LandingPage';
 
 const BOARDS = [
   { id: 'g', name: 'Technology' },
@@ -222,16 +223,17 @@ function BoardHeader({ currentBoard }: { currentBoard: string }) {
   );
 }
 
+
 // Main App with Routes
 export default function App() {
   return (
     <div className="min-h-screen">
       <Routes>
-        <Route path="/" element={<Navigate to="/g/" replace />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/:boardId/" element={<BoardPage />} />
         <Route path="/:boardId/thread/:threadId" element={<ThreadPage />} />
         {/* Fallback for any other paths */}
-        <Route path="*" element={<Navigate to="/g/" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       
       {/* FOOTER */}
