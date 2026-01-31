@@ -30,17 +30,31 @@ export default async function handler(request: Request) {
             return new Response(JSON.stringify([]), { status: 200 });
         }
 
-        // Pipeline to fetch details
-        const pipeline = redis.pipeline();
+        // Pipeline 1: Fetch thread details
+        const threadPipeline = redis.pipeline();
         for (const tid of threadIds) {
-            pipeline.hgetall(`thread:${tid}`);
+            threadPipeline.hgetall(`thread:${tid}`);
         }
-        const threads = await pipeline.exec();
+        const threads = await threadPipeline.exec();
 
         // Filter out nulls
         const validThreads = threads.filter((t: any) => t && t.id);
 
-        return new Response(JSON.stringify(validThreads), {
+        // Pipeline 2: Fetch last 3 replies for each thread (for catalog preview)
+        const replyPipeline = redis.pipeline();
+        for (const thread of validThreads as any[]) {
+            // LRANGE with negative indices: -3 to -1 gets last 3 items
+            replyPipeline.lrange(`thread:${thread.id}:replies`, -3, -1);
+        }
+        const allReplies = await replyPipeline.exec();
+
+        // Attach replies to each thread
+        const threadsWithReplies = (validThreads as any[]).map((thread, index) => ({
+            ...thread,
+            replies: allReplies[index] || []
+        }));
+
+        return new Response(JSON.stringify(threadsWithReplies), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
