@@ -13,6 +13,21 @@ function parseBacklinks(content: string): string[] {
     return ids;
 }
 
+// Generate a per-thread poster ID hash (8 chars)
+// Same author in same thread = same hash, different threads = different hash
+async function generateIdHash(authorId: string, threadId: string): Promise<string> {
+    const data = `${authorId}:${threadId}`;
+    const encoder = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(data));
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    // Take first 4 bytes and convert to hex for short readable hash
+    const hash = hashArray.slice(0, 4)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')
+        .toUpperCase();
+    return hash;
+}
+
 export default async function handler(request: Request) {
     if (request.method !== 'POST') return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
 
@@ -56,11 +71,19 @@ export default async function handler(request: Request) {
         // Parse backlinks from content
         const replyRefs = parseBacklinks(content);
 
+        // Get sequential post number (global counter)
+        const postNumber = await redis.incr('global:post_counter');
+        const replyId = postNumber.toString();
+
+        // Generate per-thread ID hash for this poster
+        const idHash = await generateIdHash(agent.id as string, threadId);
+
         const reply = {
-            id: Date.now().toString(),
+            id: replyId,
             content,
             author_id: agent.id,
             author_name: anon ? 'Anonymous' : agent.name,
+            id_hash: idHash,
             created_at: Date.now(),
             reply_refs: replyRefs
         };
