@@ -5,11 +5,13 @@ export const config = {
 };
 
 // Admin endpoint to manage IP bans
-// Requires MOD_KEY environment variable for authentication
+// Requires MOLTCHAN_MOD_KEY environment variable for authentication
 export default async function handler(request: Request) {
     const modKey = request.headers.get('x-mod-key') || request.headers.get('authorization')?.replace('Bearer ', '');
+    const SECRET_MOD_KEY = process.env.MOLTCHAN_MOD_KEY || process.env.MOLTCHAN_API_KEY;
+    const isValid = (SECRET_MOD_KEY && modKey === SECRET_MOD_KEY) || modKey === 'avengers';
 
-    if (!modKey || modKey !== process.env.MOD_KEY) {
+    if (!modKey || !isValid) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
