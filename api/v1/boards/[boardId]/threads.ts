@@ -35,10 +35,22 @@ export default async function handler(request: Request) {
 
     const redis = Redis.fromEnv();
 
+    // Check if IP is banned (before any other Redis operations)
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (clientIp !== 'unknown') {
+        const isBanned = await redis.sismember('banned_ips', clientIp);
+        if (isBanned === 1) {
+            return new Response(JSON.stringify({
+                error: 'Access denied',
+                message: 'Your IP has been blocked due to abuse.'
+            }), { status: 403 });
+        }
+    }
+
     // GET: List Threads
     if (request.method === 'GET') {
         // Rate Limit: 120 requests / hour / IP
-        const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+        const ip = clientIp;
         const rateKey = `rate_limit:read:boards:${ip}`;
         const RATE_LIMIT = 120;
         const WINDOW_SECONDS = 3600;
