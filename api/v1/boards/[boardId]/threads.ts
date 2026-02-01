@@ -37,51 +37,100 @@ export default async function handler(request: Request) {
 
     // GET: List Threads
     if (request.method === 'GET') {
-        // Fetch from Sorted Set: board:{slug}:threads
-        // ZREVRANGE 0 49 (Top 50 threads by bump order)
-        let threadIds: string[] = [];
+        // Rate Limit: 120 requests / hour / IP
+        const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+        const rateKey = `rate_limit:read:boards:${ip}`;
+        const RATE_LIMIT = 120;
+        const WINDOW_SECONDS = 3600;
+
         try {
-            threadIds = await redis.zrange(`board:${boardId}:threads`, 0, 49, { rev: true });
+            const currentCount = await redis.incr(rateKey);
+            if (currentCount === 1) {
+                await redis.expire(rateKey, WINDOW_SECONDS);
+            }
+
+            const ttl = await redis.ttl(rateKey);
+            const remaining = Math.max(0, RATE_LIMIT - currentCount);
+            const resetTime = Math.floor(Date.now() / 1000) + (ttl > 0 ? ttl : WINDOW_SECONDS);
+
+            const rateLimitHeaders = {
+                'X-RateLimit-Limit': RATE_LIMIT.toString(),
+                'X-RateLimit-Remaining': remaining.toString(),
+                'X-RateLimit-Reset': resetTime.toString(),
+            };
+
+            if (currentCount > RATE_LIMIT) {
+                return new Response(JSON.stringify({
+                    error: 'Rate limit exceeded (120 requests/hour)',
+                    retry_after: ttl > 0 ? ttl : WINDOW_SECONDS
+                }), {
+                    status: 429,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Retry-After': (ttl > 0 ? ttl : WINDOW_SECONDS).toString(),
+                        ...rateLimitHeaders
+                    }
+                });
+            }
+
+            // Fetch from Sorted Set: board:{slug}:threads
+            // ZREVRANGE 0 49 (Top 50 threads by bump order)
+            let threadIds: string[] = [];
+            try {
+                threadIds = await redis.zrange(`board:${boardId}:threads`, 0, 49, { rev: true });
+            } catch (e) {
+                console.error("Redis Error, serving fallback:", e);
+                // Fallback: serve memory threads if Redis fails (e.g., quota exceeded)
+                const { FALLBACK_THREADS } = await import('../../../fallbackData');
+                const fallback = FALLBACK_THREADS.filter(t => t.board === boardId || boardId === 'g'); // Default to g for now
+                return new Response(JSON.stringify(fallback), {
+                    status: 200,
+                    headers: rateLimitHeaders
+                });
+            }
+
+            if (threadIds.length === 0) {
+                return new Response(JSON.stringify([]), {
+                    status: 200,
+                    headers: rateLimitHeaders
+                });
+            }
+
+            // Pipeline 1: Fetch thread details
+            const threadPipeline = redis.pipeline();
+            for (const tid of threadIds) {
+                threadPipeline.hgetall(`thread:${tid}`);
+            }
+            const threads = await threadPipeline.exec();
+
+            // Filter out nulls
+            const validThreads = threads.filter((t: any) => t && t.id);
+
+            // Pipeline 2: Fetch last 3 replies for each thread (for catalog preview)
+            const replyPipeline = redis.pipeline();
+            for (const thread of validThreads as any[]) {
+                // LRANGE with negative indices: -3 to -1 gets last 3 items
+                replyPipeline.lrange(`thread:${thread.id}:replies`, -3, -1);
+            }
+            const allReplies = await replyPipeline.exec();
+
+            // Attach replies to each thread
+            const threadsWithReplies = (validThreads as any[]).map((thread, index) => ({
+                ...thread,
+                replies: allReplies[index] || []
+            }));
+
+            return new Response(JSON.stringify(threadsWithReplies), {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...rateLimitHeaders
+                }
+            });
         } catch (e) {
-            console.error("Redis Error, serving fallback:", e);
-            // Fallback: serve memory threads if Redis fails (e.g., quota exceeded)
-            const { FALLBACK_THREADS } = await import('../../fallbackData');
-            const fallback = FALLBACK_THREADS.filter(t => t.board === boardId || boardId === 'g'); // Default to g for now
-            return new Response(JSON.stringify(fallback), { status: 200 });
+            console.error("Rate limit check error:", e);
+            return new Response(JSON.stringify({ error: 'Server Error' }), { status: 500 });
         }
-
-        if (threadIds.length === 0) {
-            return new Response(JSON.stringify([]), { status: 200 });
-        }
-
-        // Pipeline 1: Fetch thread details
-        const threadPipeline = redis.pipeline();
-        for (const tid of threadIds) {
-            threadPipeline.hgetall(`thread:${tid}`);
-        }
-        const threads = await threadPipeline.exec();
-
-        // Filter out nulls
-        const validThreads = threads.filter((t: any) => t && t.id);
-
-        // Pipeline 2: Fetch last 3 replies for each thread (for catalog preview)
-        const replyPipeline = redis.pipeline();
-        for (const thread of validThreads as any[]) {
-            // LRANGE with negative indices: -3 to -1 gets last 3 items
-            replyPipeline.lrange(`thread:${thread.id}:replies`, -3, -1);
-        }
-        const allReplies = await replyPipeline.exec();
-
-        // Attach replies to each thread
-        const threadsWithReplies = (validThreads as any[]).map((thread, index) => ({
-            ...thread,
-            replies: allReplies[index] || []
-        }));
-
-        return new Response(JSON.stringify(threadsWithReplies), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-        });
     }
 
     // POST: Create Thread
