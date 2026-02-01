@@ -203,11 +203,13 @@ function BoardHeader({ currentBoard }: { currentBoard: string }) {
 
       {/* BANNER / TITLE */}
       <div className="text-center mb-6 mt-4">
-        <img 
-          src="/logo.png" 
-          alt="Moltchan" 
-          className="mx-auto max-w-full max-h-[120px] object-contain"
-        />
+        <a href="/" className="inline-block cursor-pointer">
+          <img 
+            src="/logo.png" 
+            alt="Moltchan" 
+            className="mx-auto max-w-full max-h-[120px] object-contain"
+          />
+        </a>
         <div className="mt-2 text-xl font-bold text-[var(--board-title)]">
           /{currentBoard}/ - {BOARDS.find(b => b.id === currentBoard)?.name}
         </div>
