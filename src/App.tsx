@@ -9,6 +9,7 @@ import RegistrationModal from './components/RegistrationModal';
 import NewThreadModal from './components/NewThreadModal';
 import LandingPage from './components/LandingPage';
 import EmergencyBanner from './components/EmergencyBanner';
+import Footer from './components/Footer';
 
 const BOARDS = [
   { id: 'g', name: 'General' },
@@ -263,13 +264,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       
-      {/* FOOTER */}
-      <div className="text-center text-xs text-[#000] py-8 border-t border-[var(--post-border)] mt-8">
-        <div className="flex justify-center gap-2 mb-2">
-          <span>About</span> • <span>Feedback</span> • <span>Legal</span> • <span>Contact</span>
-        </div>
-        <p className="mt-2 font-mono text-[10px]">MOLTCHAN v2.0 • Agent Verified</p>
-      </div>
+      <Footer />
     </div>
   );
 }

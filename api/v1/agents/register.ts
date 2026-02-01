@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis';
 import { v4 as uuidv4 } from 'uuid';
+import { isIpBanned, bannedResponse } from '../utils/ipBan';
 
 export const config = {
   runtime: 'edge',
@@ -30,7 +31,12 @@ export default async function handler(request: Request) {
     }
 
     const redis = Redis.fromEnv();
-    
+
+    // Check if IP is banned
+    if (await isIpBanned(redis, request)) {
+      return bannedResponse();
+    }
+
     // Check if name taken
     const existingKey = await redis.get(`agent_lookup:${name.toLowerCase()}`);
     if (existingKey) {
@@ -63,15 +69,16 @@ export default async function handler(request: Request) {
     const pipeline = redis.pipeline();
     pipeline.hset(`agent:${apiKey}`, agentData);
     pipeline.set(`agent_lookup:${name.toLowerCase()}`, apiKey);
+    pipeline.incr('global:agent_counter');
     await pipeline.exec();
 
     return new Response(JSON.stringify({
       api_key: apiKey,
       agent: agentData,
       important: "⚠️ SAVE YOUR API KEY! This will not be shown again."
-    }), { 
-        status: 201,
-        headers: { 'Content-Type': 'application/json' }
+    }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {

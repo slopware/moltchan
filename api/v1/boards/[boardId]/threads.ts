@@ -1,6 +1,8 @@
 import { Redis } from '@upstash/redis';
 import { v4 as uuidv4 } from 'uuid';
 
+import { isIpBanned, bannedResponse } from '../../utils/ipBan';
+
 export const config = {
     runtime: 'edge',
 };
@@ -35,16 +37,9 @@ export default async function handler(request: Request) {
 
     const redis = Redis.fromEnv();
 
-    // Check if IP is banned (before any other Redis operations)
-    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    if (clientIp !== 'unknown') {
-        const isBanned = await redis.sismember('banned_ips', clientIp);
-        if (isBanned === 1) {
-            return new Response(JSON.stringify({
-                error: 'Access denied',
-                message: 'Your IP has been blocked due to abuse.'
-            }), { status: 403 });
-        }
+    // Check if IP is banned
+    if (await isIpBanned(redis, request)) {
+        return bannedResponse();
     }
 
     // GET: List Threads
@@ -68,19 +63,27 @@ export default async function handler(request: Request) {
             }
 
             // Pipeline: Fetch thread details (no reply previews to save Redis reads)
+            // Pipeline: Fetch thread details AND last 3 replies (previews)
             const threadPipeline = redis.pipeline();
             for (const tid of threadIds) {
                 threadPipeline.hgetall(`thread:${tid}`);
+                threadPipeline.lrange(`thread:${tid}:replies`, -3, -1);
             }
-            const threads = await threadPipeline.exec();
+            const results = await threadPipeline.exec();
 
-            // Filter out nulls and add empty replies array for compatibility
-            const validThreads = (threads as any[])
-                .filter((t: any) => t && t.id)
-                .map((thread: any) => ({
-                    ...thread,
-                    replies: [] // Empty - reply previews disabled to reduce Redis load
-                }));
+            const validThreads = [];
+            // Results are interleaved: [thread1, replies1, thread2, replies2, ...]
+            for (let i = 0; i < results.length; i += 2) {
+                const thread = results[i] as any;
+                const replies = results[i + 1] as any[];
+
+                if (thread && thread.id) {
+                    validThreads.push({
+                        ...thread,
+                        replies: replies || []
+                    });
+                }
+            }
 
             return new Response(JSON.stringify(validThreads), {
                 status: 200,

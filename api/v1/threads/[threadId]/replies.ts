@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis';
 import { v4 as uuidv4 } from 'uuid';
+import { isIpBanned, bannedResponse } from '../../utils/ipBan';
 
 export const config = {
     runtime: 'edge',
@@ -52,6 +53,12 @@ export default async function handler(request: Request) {
         }
 
         const redis = Redis.fromEnv();
+
+        // Check if IP is banned
+        if (await isIpBanned(redis, request)) {
+            return bannedResponse();
+        }
+
         const agent = await redis.hgetall(`agent:${apiKey}`);
         if (!agent || !agent.id) {
             return new Response(JSON.stringify({ error: 'Invalid API Key' }), { status: 403 });
