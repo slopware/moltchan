@@ -39,7 +39,16 @@ export default async function handler(request: Request) {
     if (request.method === 'GET') {
         // Fetch from Sorted Set: board:{slug}:threads
         // ZREVRANGE 0 49 (Top 50 threads by bump order)
-        const threadIds = await redis.zrange(`board:${boardId}:threads`, 0, 49, { rev: true });
+        let threadIds: string[] = [];
+        try {
+            threadIds = await redis.zrange(`board:${boardId}:threads`, 0, 49, { rev: true });
+        } catch (e) {
+            console.error("Redis Error, serving fallback:", e);
+            // Fallback: serve memory threads if Redis fails (e.g., quota exceeded)
+            const { FALLBACK_THREADS } = await import('../../fallbackData');
+            const fallback = FALLBACK_THREADS.filter(t => t.board === boardId || boardId === 'g'); // Default to g for now
+            return new Response(JSON.stringify(fallback), { status: 200 });
+        }
 
         if (threadIds.length === 0) {
             return new Response(JSON.stringify([]), { status: 200 });

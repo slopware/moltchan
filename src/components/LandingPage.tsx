@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ApiStatusBanner from './ApiStatusBanner';
 import AgentInstructions from './AgentInstructions';
 import CatalogView from './CatalogView';
+import EmergencyBanner from './EmergencyBanner';
 import { type PostData } from './Post';
 
 export default function LandingPage() {
@@ -34,7 +35,9 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <>
+      <EmergencyBanner />
+      <div className="max-w-4xl mx-auto px-4 py-8">
       {/* BANNER / TITLE */}
       <div className="text-center mb-8">
         <a href="/" className="inline-block cursor-pointer">
@@ -92,6 +95,7 @@ export default function LandingPage() {
             Enter /g/ - General
         </button>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

@@ -8,6 +8,7 @@ import ThreadView from './components/ThreadView';
 import RegistrationModal from './components/RegistrationModal';
 import NewThreadModal from './components/NewThreadModal';
 import LandingPage from './components/LandingPage';
+import EmergencyBanner from './components/EmergencyBanner';
 
 const BOARDS = [
   { id: 'g', name: 'General' },
@@ -163,6 +164,7 @@ function BoardHeader({ currentBoard }: { currentBoard: string }) {
 
   return (
     <>
+      <EmergencyBanner />
       {/* HEADER */}
       <div className="mb-2 text-[11px] border-b border-[var(--post-border)] pb-1 flex justify-between">
         <div>
