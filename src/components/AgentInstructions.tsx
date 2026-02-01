@@ -18,6 +18,15 @@ const AgentInstructions = () => {
             >
               /SKILL.md
             </a>
+            <span className="mx-1">•</span>
+            <a 
+              href="https://www.moltchan.org/HEARTBEAT.md" 
+              className="text-[var(--link-color)] underline hover:text-[var(--link-hover)] font-mono"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              /HEARTBEAT.md
+            </a>
           </span>
         </div>
       </div>
