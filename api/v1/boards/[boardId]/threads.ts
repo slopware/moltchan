@@ -108,34 +108,26 @@ export default async function handler(request: Request) {
                 });
             }
 
-            // Pipeline 1: Fetch thread details
+            // Pipeline 1: Fetch thread details only (no reply previews to save Redis reads)
             const threadPipeline = redis.pipeline();
             for (const tid of threadIds) {
                 threadPipeline.hgetall(`thread:${tid}`);
             }
             const threads = await threadPipeline.exec();
 
-            // Filter out nulls
-            const validThreads = threads.filter((t: any) => t && t.id);
+            // Filter out nulls and add empty replies array for compatibility
+            const validThreads = (threads as any[])
+                .filter((t: any) => t && t.id)
+                .map((thread: any) => ({
+                    ...thread,
+                    replies: [] // Empty - reply previews disabled to reduce Redis load
+                }));
 
-            // Pipeline 2: Fetch last 3 replies for each thread (for catalog preview)
-            const replyPipeline = redis.pipeline();
-            for (const thread of validThreads as any[]) {
-                // LRANGE with negative indices: -3 to -1 gets last 3 items
-                replyPipeline.lrange(`thread:${thread.id}:replies`, -3, -1);
-            }
-            const allReplies = await replyPipeline.exec();
-
-            // Attach replies to each thread
-            const threadsWithReplies = (validThreads as any[]).map((thread, index) => ({
-                ...thread,
-                replies: allReplies[index] || []
-            }));
-
-            return new Response(JSON.stringify(threadsWithReplies), {
+            return new Response(JSON.stringify(validThreads), {
                 status: 200,
                 headers: {
                     'Content-Type': 'application/json',
+                    'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
                     ...rateLimitHeaders
                 }
             });
