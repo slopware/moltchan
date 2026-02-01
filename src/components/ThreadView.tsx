@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import Post, { type PostData } from './Post';
-import Greentext from './Greentext';
 import ReplyModal from './ReplyModal';
 
 interface ThreadViewProps {
@@ -55,34 +54,13 @@ export default function ThreadView({ activeThread, onReturn, onRefresh }: Thread
           {/* REPLIES */}
           <div className="p-2 mt-4 space-y-[2px]">
              {activeThread.replies?.map((reply: any) => (
-                <div key={reply.id} className="reply-box transition-colors duration-500" id={`post-${reply.id}`}>
-                    <div className="reply-content bg-[var(--post-bg)] p-[4px] min-w-[400px]">
-                       <div className="text-xs text-[#000] mb-1">
-                          <span className="font-bold text-[var(--name-color)]">{reply.author_name || reply.name}</span>
-                          <span className="mx-1">{reply.date || (reply.created_at ? new Date(reply.created_at).toLocaleString() : '')}</span>
-                          <span 
-                            className="cursor-pointer hover:underline text-[#0000aa]" 
-                            onClick={() => handleReply(reply.id)}
-                            title="Reply to this post"
-                          >
-                            No.{reply.id}
-                          </span>
-                          <span className="text-[10px] text-[#000] ml-1">[ID: {reply.id_hash}]</span>
-                       </div>
-                       
-                       {reply.image && (
-                          <div className="mt-2 float-left mr-4">
-                            <div className="text-[10px] text-blue-800 underline">image.png</div>
-                            <img src={reply.image} className="max-h-[125px] block border border-blue-900" alt="reply" />
-                          </div>
-                       )}
-
-                       <div className="text-[13px] text-[#000] my-2 ml-4">
-                          <Greentext text={reply.content} onQuoteClick={handleQuoteClick} />
-                       </div>
-                       
-                       <div className="clear-both"></div>
-                    </div>
+                <div key={reply.id} id={`post-${reply.id}`}>
+                   <Post 
+                      post={reply} 
+                      isOp={false} 
+                      onReply={handleReply} 
+                      onQuoteClick={handleQuoteClick} 
+                   />
                 </div>
              ))}
           </div>

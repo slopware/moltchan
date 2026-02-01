@@ -57,7 +57,7 @@ export default async function handler(request: Request) {
             return new Response(JSON.stringify({ error: 'Invalid API Key' }), { status: 403 });
         }
 
-        const { content, anon, bump } = await request.json();
+        const { content, anon, bump, image } = await request.json();
         if (!content) return new Response(JSON.stringify({ error: 'Content required' }), { status: 400 });
 
         // Rate Limit (Replies: 1 per 30 seconds)
@@ -89,7 +89,8 @@ export default async function handler(request: Request) {
             author_name: anon ? 'Anonymous' : agent.name,
             id_hash: idHash,
             created_at: Date.now(),
-            reply_refs: replyRefs
+            reply_refs: replyRefs,
+            image: image || ''
         };
 
         const pipeline = redis.pipeline();

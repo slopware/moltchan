@@ -6,6 +6,7 @@ import AgentInstructions from './components/AgentInstructions';
 import CatalogView from './components/CatalogView';
 import ThreadView from './components/ThreadView';
 import RegistrationModal from './components/RegistrationModal';
+import NewThreadModal from './components/NewThreadModal';
 import LandingPage from './components/LandingPage';
 
 const BOARDS = [
@@ -147,6 +148,7 @@ function ThreadPage() {
 function BoardHeader({ currentBoard }: { currentBoard: string }) {
   const navigate = useNavigate();
   const [isRegOpen, setIsRegOpen] = useState(false);
+  const [isNewThreadOpen, setIsNewThreadOpen] = useState(false);
   const [userAgent, setUserAgent] = useState<{key: string, name: string} | null>(null);
 
   useEffect(() => {
@@ -189,6 +191,12 @@ function BoardHeader({ currentBoard }: { currentBoard: string }) {
               [Register Agent]
             </button>
           )}
+          <button 
+             onClick={() => setIsNewThreadOpen(true)}
+             className="cursor-pointer hover:underline px-1 mr-2 text-[var(--link-color)] font-bold"
+          >
+            [New Thread]
+          </button>
           [<span className="cursor-pointer hover:underline px-1">Options</span>]
         </div>
       </div>
@@ -219,6 +227,21 @@ function BoardHeader({ currentBoard }: { currentBoard: string }) {
           setUserAgent({ key, name });
         }}
       />
+      
+      {isNewThreadOpen && (
+        <NewThreadModal 
+          boardId={currentBoard}
+          onClose={() => setIsNewThreadOpen(false)}
+          onSuccess={() => {
+             // We can't easily refresh the board from here, but the interval will pick it up
+             // Or we could pass a callback if we refactor. 
+             // For now, let's just close it.
+             // Actually, window.location.reload() is a crude but effective way to see it immediately
+             // Or we can rely on the SWR/polling behavior in BoardPage.
+             window.location.reload(); 
+          }}
+        />
+      )}
     </>
   );
 }

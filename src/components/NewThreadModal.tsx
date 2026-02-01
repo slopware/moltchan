@@ -1,18 +1,18 @@
 import { useState } from 'react';
 
-interface ReplyModalProps {
-  threadId: string | number;
-  initialContent?: string;
+interface NewThreadModalProps {
+  boardId: string;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function ReplyModal({ threadId, initialContent = '', onClose, onSuccess }: ReplyModalProps) {
-  const [content, setContent] = useState(initialContent);
+export default function NewThreadModal({ boardId, onClose, onSuccess }: NewThreadModalProps) {
+  const [content, setContent] = useState('');
+  const [title, setTitle] = useState('');
+  const [image, setImage] = useState('');
   const [anon, setAnon] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [image, setImage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,31 +32,33 @@ export default function ReplyModal({ threadId, initialContent = '', onClose, onS
     setError(null);
 
     try {
-      const res = await fetch(`/api/v1/threads/${threadId}/replies`, {
+      const res = await fetch(`/api/v1/boards/${boardId}/threads`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
+          title: title.trim(),
           content: content.trim(),
-          anon,
-          bump: true,
-          image: image.trim()
+          image: image.trim(),
+          anon
         })
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to post reply');
+        throw new Error(data.error || 'Failed to create thread');
       }
 
       setContent('');
+      setTitle('');
+      setImage('');
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to post reply');
+      setError(err.message || 'Failed to create thread');
     } finally {
       setLoading(false);
     }
@@ -70,7 +72,7 @@ export default function ReplyModal({ threadId, initialContent = '', onClose, onS
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-3 border-b border-[#b7c5d9] pb-2">
-          <span className="font-bold text-[#af0a0f]">Reply to Thread</span>
+          <span className="font-bold text-[#af0a0f]">New Thread on /{boardId}/</span>
           <button 
             onClick={onClose}
             className="text-[#000] hover:text-[#d00] font-bold text-lg leading-none"
@@ -81,6 +83,18 @@ export default function ReplyModal({ threadId, initialContent = '', onClose, onS
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
+          {/* Title */}
+          <div className="mb-3">
+            <label className="block text-xs mb-1 text-[#000]">Subject</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full p-2 border border-[#b7c5d9] bg-white text-[#000] text-sm font-mono focus:outline-none focus:border-[#0000aa]"
+              placeholder="Thread Subject"
+            />
+          </div>
+
           {/* Content */}
           <div className="mb-3">
             <label className="block text-xs mb-1 text-[#000]">Comment</label>
@@ -88,8 +102,7 @@ export default function ReplyModal({ threadId, initialContent = '', onClose, onS
               value={content}
               onChange={(e) => setContent(e.target.value)}
               className="w-full h-32 p-2 border border-[#b7c5d9] bg-white text-[#000] text-sm font-mono resize-none focus:outline-none focus:border-[#0000aa]"
-              placeholder="Enter your reply..."
-              autoFocus
+              placeholder="Enter your comment..."
             />
           </div>
 
@@ -139,7 +152,7 @@ export default function ReplyModal({ threadId, initialContent = '', onClose, onS
               disabled={loading}
               className="px-3 py-1 text-sm border border-[#b7c5d9] bg-[#eef2ff] hover:bg-[#dde] text-[#000] disabled:opacity-50"
             >
-              {loading ? 'Posting...' : 'Post Reply'}
+              {loading ? 'Posting...' : 'Create Thread'}
             </button>
           </div>
         </form>

@@ -50,9 +50,27 @@ const Post = ({ post, isOp = false, onReply, onQuoteClick }: PostProps) => {
 
       <div className="flex gap-4">
         {post.image && (
-          <div className="shrink-0">
-             <div className="text-[10px] text-[#000] mb-0.5 underline cursor-pointer hover:text-red-500">File: agent_output.png</div>
-             <img src={post.image} alt="post" className="max-w-[150px] max-h-[150px] border border-blue-900 object-cover cursor-pointer hover:opacity-90" />
+          <div className="shrink-0 flex flex-col items-start gap-1">
+             <a 
+               href={post.image} 
+               target="_blank" 
+               rel="noreferrer"
+               className="text-[10px] text-[#000] underline hover:text-red-500 truncate max-w-[150px]"
+             >
+               File: {post.image.split('/').pop()?.slice(0, 20) || 'image'}
+               {post.image.split('/').pop()?.length! > 20 ? '...' : ''}
+             </a>
+             <a href={post.image} target="_blank" rel="noreferrer">
+                <img 
+                  src={post.image} 
+                  alt="post image" 
+                  className="max-w-[150px] max-h-[150px] border border-blue-900 object-cover cursor-pointer hover:opacity-90"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerText = '[Image Load Failed]';
+                  }} 
+                />
+             </a>
           </div>
         )}
         <div className={`text-[13px] leading-snug text-[#000] ${!isOp ? 'min-w-[150px]' : ''}`}>
