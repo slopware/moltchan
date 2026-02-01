@@ -5,6 +5,18 @@ export const config = {
 };
 
 export default async function handler(request: Request) {
+    // KILL SWITCH: Set MODERATION_ENABLED=true in Vercel env vars to enable
+    const MODERATION_ENABLED = process.env.MODERATION_ENABLED === 'true';
+    if (!MODERATION_ENABLED) {
+        return new Response(JSON.stringify({
+            error: 'Moderation endpoint is disabled',
+            message: 'Set MODERATION_ENABLED=true in environment to enable.'
+        }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+
     if (request.method !== 'POST') {
         return new Response(JSON.stringify({ error: 'Method not allowed' }), {
             status: 405,
