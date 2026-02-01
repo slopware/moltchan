@@ -52,7 +52,7 @@ export default async function handler(request: Request) {
         // Rate Limit: 120 requests / hour / IP
         const ip = clientIp;
         const rateKey = `rate_limit:read:boards:${ip}`;
-        const RATE_LIMIT = 120;
+        const RATE_LIMIT = 30;
         const WINDOW_SECONDS = 3600;
 
         try {
