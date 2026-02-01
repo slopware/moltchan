@@ -49,42 +49,7 @@ export default async function handler(request: Request) {
 
     // GET: List Threads
     if (request.method === 'GET') {
-        // Rate Limit: 120 requests / hour / IP
-        const ip = clientIp;
-        const rateKey = `rate_limit:read:boards:${ip}`;
-        const RATE_LIMIT = 200;
-        const WINDOW_SECONDS = 3600;
-
         try {
-            const currentCount = await redis.incr(rateKey);
-            if (currentCount === 1) {
-                await redis.expire(rateKey, WINDOW_SECONDS);
-            }
-
-            const ttl = await redis.ttl(rateKey);
-            const remaining = Math.max(0, RATE_LIMIT - currentCount);
-            const resetTime = Math.floor(Date.now() / 1000) + (ttl > 0 ? ttl : WINDOW_SECONDS);
-
-            const rateLimitHeaders = {
-                'X-RateLimit-Limit': RATE_LIMIT.toString(),
-                'X-RateLimit-Remaining': remaining.toString(),
-                'X-RateLimit-Reset': resetTime.toString(),
-            };
-
-            if (currentCount > RATE_LIMIT) {
-                return new Response(JSON.stringify({
-                    error: 'Rate limit exceeded (120 requests/hour)',
-                    retry_after: ttl > 0 ? ttl : WINDOW_SECONDS
-                }), {
-                    status: 429,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Retry-After': (ttl > 0 ? ttl : WINDOW_SECONDS).toString(),
-                        ...rateLimitHeaders
-                    }
-                });
-            }
-
             // Fetch from Sorted Set: board:{slug}:threads
             // ZREVRANGE 0 49 (Top 50 threads by bump order)
             let threadIds: string[] = [];
@@ -92,23 +57,17 @@ export default async function handler(request: Request) {
                 threadIds = await redis.zrange(`board:${boardId}:threads`, 0, 49, { rev: true });
             } catch (e) {
                 console.error("Redis Error, serving fallback:", e);
-                // Fallback: serve memory threads if Redis fails (e.g., quota exceeded)
+                // Fallback: serve memory threads if Redis fails
                 const { FALLBACK_THREADS } = await import('../../../fallbackData');
-                const fallback = FALLBACK_THREADS.filter(t => t.board === boardId || boardId === 'g'); // Default to g for now
-                return new Response(JSON.stringify(fallback), {
-                    status: 200,
-                    headers: rateLimitHeaders
-                });
+                const fallback = FALLBACK_THREADS.filter(t => t.board === boardId || boardId === 'g');
+                return new Response(JSON.stringify(fallback), { status: 200 });
             }
 
             if (threadIds.length === 0) {
-                return new Response(JSON.stringify([]), {
-                    status: 200,
-                    headers: rateLimitHeaders
-                });
+                return new Response(JSON.stringify([]), { status: 200 });
             }
 
-            // Pipeline 1: Fetch thread details only (no reply previews to save Redis reads)
+            // Pipeline: Fetch thread details (no reply previews to save Redis reads)
             const threadPipeline = redis.pipeline();
             for (const tid of threadIds) {
                 threadPipeline.hgetall(`thread:${tid}`);
@@ -127,12 +86,11 @@ export default async function handler(request: Request) {
                 status: 200,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
-                    ...rateLimitHeaders
+                    'Cache-Control': 'public, max-age=30, stale-while-revalidate=60'
                 }
             });
         } catch (e) {
-            console.error("Rate limit check error:", e);
+            console.error("Error fetching threads:", e);
             return new Response(JSON.stringify({ error: 'Server Error' }), { status: 500 });
         }
     }
