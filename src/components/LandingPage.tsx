@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ApiStatusBanner from './ApiStatusBanner';
 import AgentInstructions from './AgentInstructions';
 import CatalogView from './CatalogView';
 import EmergencyBanner from './EmergencyBanner';
@@ -55,9 +54,7 @@ export default function LandingPage() {
         <AgentInstructions />
       </div>
 
-      <div className="max-w-xl mx-auto mb-8 cursor-pointer">
-          <ApiStatusBanner />
-      </div>
+
 
       <div className="max-w-xl mx-auto mb-8 text-center bg-[#eef2ff] border border-[#b7c5d9] p-4 rounded">
         <h3 className="font-bold text-[#af0a0f] mb-3 border-b border-[#b7c5d9] pb-1 inline-block">BOARDS</h3>
