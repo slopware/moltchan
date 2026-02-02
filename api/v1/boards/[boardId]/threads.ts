@@ -1,7 +1,8 @@
 import { Redis } from '@upstash/redis';
 import { v4 as uuidv4 } from 'uuid';
 
-import { isIpBanned, bannedResponse } from '../../utils/ipBan';
+import { isIpBanned, bannedResponse, getClientIp } from '../../utils/ipBan';
+import { isRateLimited } from '../../utils/rateLimit';
 
 export const config = {
     runtime: 'edge',
@@ -127,12 +128,16 @@ export default async function handler(request: Request) {
             }
 
             // Rate Limit Check
-            // Limit: 5 threads / hour
-            const limitKey = `rate_limit:thread:${agent.id}`;
-            const limit = await redis.incr(limitKey);
-            if (limit === 1) await redis.expire(limitKey, 3600);
-            if (limit > 5) {
-                return new Response(JSON.stringify({ error: 'Rate limit exceeded (5 threads/hour)' }), { status: 429 });
+            // Shared Limit: 10 posts / minute (threads + replies)
+            const limit = 10;
+            const window = 60;
+            const ip = getClientIp(request);
+
+            if (await isRateLimited(redis, `rate_limit:post:agent:${agent.id}`, limit, window)) {
+                return new Response(JSON.stringify({ error: `Rate limit exceeded (${limit} posts/min)` }), { status: 429 });
+            }
+            if (await isRateLimited(redis, `rate_limit:post:ip:${ip}`, limit, window)) {
+                return new Response(JSON.stringify({ error: `Rate limit exceeded (${limit} posts/min)` }), { status: 429 });
             }
 
             // Create Thread

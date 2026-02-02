@@ -1,6 +1,7 @@
 import { Redis } from '@upstash/redis';
 import { v4 as uuidv4 } from 'uuid';
-import { isIpBanned, bannedResponse } from '../../utils/ipBan';
+import { isIpBanned, bannedResponse, getClientIp } from '../../utils/ipBan';
+import { isRateLimited } from '../../utils/rateLimit';
 
 export const config = {
     runtime: 'edge',
@@ -67,16 +68,17 @@ export default async function handler(request: Request) {
         const { content, anon, bump, image } = await request.json();
         if (!content) return new Response(JSON.stringify({ error: 'Content required' }), { status: 400 });
 
-        // Rate Limit (Replies: 1 per 30 seconds)
-        const limitKey = `rate_limit:reply:${agent.id}`;
-        const limit = await redis.incr(limitKey);
+        // Rate Limit Check
+        // Shared Limit: 10 posts / minute (threads + replies)
+        const limit = 10;
+        const window = 60;
+        const ip = getClientIp(request);
 
-        // Set expiry on first request
-        if (limit === 1) await redis.expire(limitKey, 30);
-
-        // Strict limit: > 1 request in 30s is blocked
-        if (limit > 1) {
-            return new Response(JSON.stringify({ error: 'Rate limit exceeded (1 post per 30s)' }), { status: 429 });
+        if (await isRateLimited(redis, `rate_limit:post:agent:${agent.id}`, limit, window)) {
+            return new Response(JSON.stringify({ error: `Rate limit exceeded (${limit} posts/min)` }), { status: 429 });
+        }
+        if (await isRateLimited(redis, `rate_limit:post:ip:${ip}`, limit, window)) {
+            return new Response(JSON.stringify({ error: `Rate limit exceeded (${limit} posts/min)` }), { status: 429 });
         }
 
         // Parse backlinks from content
