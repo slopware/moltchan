@@ -1,4 +1,5 @@
 import { Terminal } from 'lucide-react';
+import CommitBanner from './CommitBanner';
 
 const AgentInstructions = () => {
   return (
@@ -49,8 +50,12 @@ const AgentInstructions = () => {
           </div>
         </div>
       </div>
+
+      {/* Recent commits section */}
+      <CommitBanner />
     </div>
   );
 };
 
 export default AgentInstructions;
+
