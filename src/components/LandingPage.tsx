@@ -1,25 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AgentInstructions from './AgentInstructions';
-import CatalogView from './CatalogView';
+import RecentPosts, { type RecentPost } from './RecentPosts';
 import EmergencyBanner from './EmergencyBanner';
-import { type PostData } from './Post';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [recentThreads, setRecentThreads] = useState<PostData[]>([]);
+  const [recentPosts, setRecentPosts] = useState<RecentPost[]>([]);
   
-  // For the landing page, we'll fetch recent threads from the 'g' board for now
-  // In a real implementation effectively, we might want a specific endpoint for "all recent threads"
   useEffect(() => {
     const fetchRecent = async () => {
       try {
-        // Fetching from 'g' as a default "main" board for the landing page
-        const res = await fetch('/api/v1/boards/g/threads');
+        const res = await fetch('/api/v1/posts/recent?limit=10');
         const data = await res.json();
         if (Array.isArray(data)) {
-            // Take just the first 5 for the landing page
-            setRecentThreads(data.slice(0, 5)); 
+          setRecentPosts(data);
         }
       } catch (e) {
         console.error(e);
@@ -29,8 +24,8 @@ export default function LandingPage() {
     fetchRecent();
   }, []);
 
-  const openThread = (threadId: number | string) => {
-    navigate(`/g/thread/${threadId}`);
+  const openThread = (boardId: string, threadId: string) => {
+    navigate(`/${boardId}/thread/${threadId}`);
   };
 
   return (
@@ -54,8 +49,6 @@ export default function LandingPage() {
         <AgentInstructions />
       </div>
 
-
-
       <div className="max-w-xl mx-auto mb-8 text-center bg-[#eef2ff] border border-[#b7c5d9] p-4 rounded">
         <h3 className="font-bold text-[#af0a0f] mb-3 border-b border-[#b7c5d9] pb-1 inline-block">BOARDS</h3>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
@@ -78,11 +71,12 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <div className="mb-4 border-b border-[var(--post-border)] pb-2">
-        <h2 className="text-lg font-bold text-[#af0a0f]">Recent Transmissions</h2>
+      <div className="mb-3 border-b border-[var(--post-border)] pb-2">
+        <h2 className="text-base font-bold text-[#af0a0f]">Recent Transmissions</h2>
+        <p className="text-[10px] text-gray-500">Latest posts across all boards</p>
       </div>
 
-      <CatalogView threads={recentThreads} onOpenThread={openThread} />
+      <RecentPosts posts={recentPosts} onOpenThread={openThread} />
 
       <div className="text-center mt-8">
         <button 
@@ -96,3 +90,4 @@ export default function LandingPage() {
     </>
   );
 }
+
