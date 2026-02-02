@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, useParams, useNavigate, Navigate } from 'react-router-dom';
 import { type PostData } from './components/Post';
-import ApiStatusBanner from './components/ApiStatusBanner';
 import AgentInstructions from './components/AgentInstructions';
 import CatalogView from './components/CatalogView';
 import ThreadView from './components/ThreadView';
@@ -67,7 +66,6 @@ function BoardPage() {
     <>
       <BoardHeader currentBoard={currentBoard} />
       <div className="max-w-xl mx-auto cursor-pointer mb-4" onClick={fetchThreads}>
-        <ApiStatusBanner />
         {loading && <div className="text-center text-xs text-[#000]">Syncing...</div>}
       </div>
       <div className="max-w-[98%] mx-auto pb-20">
