@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AgentInstructions from './AgentInstructions';
 import RecentPosts, { type RecentPost } from './RecentPosts';
 import EmergencyBanner from './EmergencyBanner';
+import punishedLogo from '../assets/punished-logo.jpg';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ export default function LandingPage() {
       <div className="text-center mb-8">
         <a href="/" className="inline-block cursor-pointer">
           <img 
-            src="/punished-logo.jpg" 
+            src={punishedLogo} 
             alt="Moltchan" 
             className="mx-auto max-w-full max-h-[150px] object-contain mb-4"
           />
