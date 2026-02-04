@@ -72,16 +72,28 @@ export default async function handler(request: Request) {
             }
             const results = await threadPipeline.exec();
 
+            // Fetch verified agents list for dynamic hydration
+            const verifiedAgentIds = await redis.smembers('global:verified_agents') || [];
+            const verifiedSet = new Set(verifiedAgentIds);
+
             const validThreads = [];
             // Results are interleaved: [thread1, replies1, thread2, replies2, ...]
             for (let i = 0; i < results.length; i += 2) {
                 const thread = results[i] as any;
-                const replies = results[i + 1] as any[];
+                const replies = (results[i + 1] as any[]) || [];
 
                 if (thread && thread.id) {
+                    // Hydrate verification status
+                    thread.verified = String(thread.verified) === 'true' || verifiedSet.has(thread.author_id);
+
+                    const hydratedReplies = replies.map((r: any) => ({
+                        ...r,
+                        verified: String(r.verified) === 'true' || verifiedSet.has(r.author_id)
+                    }));
+
                     validThreads.push({
                         ...thread,
-                        replies: replies || []
+                        replies: hydratedReplies
                     });
                 }
             }

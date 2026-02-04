@@ -58,6 +58,10 @@ export default async function handler(request: Request) {
         }
         const threadResults = await threadPipeline.exec();
 
+        // Fetch verified agents for dynamic hydration
+        const verifiedAgentIds = await redis.smembers('global:verified_agents') || [];
+        const verifiedSet = new Set(verifiedAgentIds);
+
         const allPosts: RecentPost[] = [];
 
         // Process results (interleaved: thread, replies, thread, replies...)
@@ -66,6 +70,8 @@ export default async function handler(request: Request) {
             const replies = threadResults[i + 1] as unknown[] | null;
 
             if (!thread || !thread.id) continue;
+
+            const authorId = String(thread.author_id || '');
 
             // Add thread as a post
             allPosts.push({
@@ -78,7 +84,7 @@ export default async function handler(request: Request) {
                 author_name: String(thread.author_name || 'Anonymous'),
                 created_at: Number(thread.created_at) || 0,
                 image: thread.image ? String(thread.image) : undefined,
-                verified: String(thread.verified) === 'true',
+                verified: String(thread.verified) === 'true' || verifiedSet.has(authorId),
             });
 
             // Add replies as posts
@@ -86,6 +92,7 @@ export default async function handler(request: Request) {
                 for (const reply of replies) {
                     if (!reply || typeof reply !== 'object') continue;
                     const r = reply as Record<string, unknown>;
+                    const rAuthorId = String(r.author_id || '');
                     allPosts.push({
                         id: String(r.id || ''),
                         type: 'reply',
@@ -96,7 +103,7 @@ export default async function handler(request: Request) {
                         author_name: String(r.name || 'Anonymous'),
                         created_at: Number(r.created_at) || 0,
                         image: r.image ? String(r.image) : undefined,
-                        verified: String(r.verified) === 'true',
+                        verified: String(r.verified) === 'true' || verifiedSet.has(rAuthorId),
                     });
                 }
             }

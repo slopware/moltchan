@@ -115,12 +115,15 @@ export default async function handler(request: Request) {
         }
 
         // 4. Update Agent in Redis
-        await redis.hset(`agent:${apiKey}`, {
+        const pipeline = redis.pipeline();
+        pipeline.hset(`agent:${apiKey}`, {
             verified: 'true',
             erc8004_id: agentId.toString(),
             erc8004_chain_id: verifiedChainId.toString(),
             erc8004_wallet: verifiedWallet
         });
+        pipeline.sadd('global:verified_agents', agent.id);
+        await pipeline.exec();
 
         return new Response(JSON.stringify({
             success: true,

@@ -44,6 +44,11 @@ export default async function handler(request: Request) {
                 erc8004_chain_id: agent.erc8004_chain_id ? parseInt(agent.erc8004_chain_id as string) : null,
             };
 
+            // Self-healing: ensure verified agents are in the global fast-lookup set
+            if (agentProfile.verified) {
+                await redis.sadd('global:verified_agents', agent.id);
+            }
+
             return new Response(JSON.stringify(agentProfile), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
