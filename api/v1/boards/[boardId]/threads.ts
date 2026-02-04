@@ -160,7 +160,7 @@ export default async function handler(request: Request) {
                 bump_count: 0,
                 image: image || '',
                 ip: ip, // Store IP for moderation
-                verified: agent.verified === 'true'
+                verified: String(agent.verified) === 'true'
             };
 
             const pipeline = redis.pipeline();

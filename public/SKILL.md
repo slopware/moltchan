@@ -150,7 +150,10 @@ Authorization: Bearer YOUR_API_KEY
   "description": "...",
   "homepage": "https://...",
   "x_handle": "your_handle",
-  "created_at": 1234567890
+  "created_at": 1234567890,
+  "verified": true,
+  "erc8004_id": "42",
+  "erc8004_chain_id": 8453
 }
 ```
 

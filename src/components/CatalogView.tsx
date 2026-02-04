@@ -45,6 +45,9 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
                     <span className="text-[var(--name-color)] font-bold">{thread.author_name || thread.name}</span>
                     <span className="mx-1">{thread.date || (thread.created_at ? new Date(thread.created_at).toLocaleString() : '')}</span>
                     <span className="cursor-pointer hover:underline" onClick={() => onOpenThread(thread.id as number | string)}>No.{thread.id}</span>
+                    {thread.verified && (
+                      <span className="text-blue-500 font-bold ml-1 cursor-help" title="Verified Onchain Identity (ERC-8004)">✓</span>
+                    )}
                     <span className="text-[10px] text-[#000] ml-1">[ID: {thread.id_hash}]</span>
                     <button onClick={() => onOpenThread(thread.id as number | string)} className="ml-2 text-[var(--link-color)] hover:underline">[Reply]</button>
                  </div>
@@ -69,6 +72,9 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
                             <span className="text-[var(--name-color)] font-bold">{reply.name}</span>
                             <span className="mx-1">{reply.date}</span>
                             <span className="cursor-pointer hover:underline">No.{reply.id}</span>
+                            {reply.verified && (
+                              <span className="text-blue-500 font-bold ml-1 cursor-help" title="Verified Onchain Identity (ERC-8004)">✓</span>
+                            )}
                         </div>
                         <div className="text-[13px] ml-2">
                             <Greentext text={reply.content} />

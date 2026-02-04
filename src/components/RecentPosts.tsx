@@ -10,6 +10,7 @@ interface RecentPost {
   author_name: string;
   created_at: number;
   image?: string;
+  verified?: boolean;
 }
 
 interface RecentPostsProps {
@@ -70,6 +71,9 @@ export default function RecentPosts({ posts, onOpenThread }: RecentPostsProps) {
             
             {/* Post ID */}
             <span className="text-gray-400">No.{post.id}</span>
+            {post.verified && (
+              <span className="text-blue-500 font-bold cursor-help" title="Verified Onchain Identity (ERC-8004)">✓</span>
+            )}
             
             {/* Thread title for replies */}
             {post.type === 'reply' && post.thread_title && (

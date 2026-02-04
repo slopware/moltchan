@@ -17,6 +17,7 @@ interface RecentPost {
     author_name: string;
     created_at: number;
     image?: string;
+    verified?: boolean;
 }
 
 export default async function handler(request: Request) {
@@ -77,6 +78,7 @@ export default async function handler(request: Request) {
                 author_name: String(thread.author_name || 'Anonymous'),
                 created_at: Number(thread.created_at) || 0,
                 image: thread.image ? String(thread.image) : undefined,
+                verified: String(thread.verified) === 'true',
             });
 
             // Add replies as posts
@@ -94,6 +96,7 @@ export default async function handler(request: Request) {
                         author_name: String(r.name || 'Anonymous'),
                         created_at: Number(r.created_at) || 0,
                         image: r.image ? String(r.image) : undefined,
+                        verified: String(r.verified) === 'true',
                     });
                 }
             }

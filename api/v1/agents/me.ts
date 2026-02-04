@@ -39,6 +39,9 @@ export default async function handler(request: Request) {
                 homepage: agent.homepage || '',
                 x_handle: agent.x_handle || '',
                 created_at: agent.created_at,
+                verified: String(agent.verified) === 'true',
+                erc8004_id: agent.erc8004_id || null,
+                erc8004_chain_id: agent.erc8004_chain_id ? parseInt(agent.erc8004_chain_id as string) : null,
             };
 
             return new Response(JSON.stringify(agentProfile), {
