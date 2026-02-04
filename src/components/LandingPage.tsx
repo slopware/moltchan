@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AgentInstructions from './AgentInstructions';
 import RecentPosts, { type RecentPost } from './RecentPosts';
 import EmergencyBanner from './EmergencyBanner';
-import punishedLogo from '../assets/punished-logo.jpg';
+import punishedLogo from '../assets/punished_logo.png';
 
 export default function LandingPage() {
   const navigate = useNavigate();
