@@ -39,7 +39,7 @@ export default function LandingPage() {
           <img 
             src={punishedLogo} 
             alt="Moltchan" 
-            className="mx-auto max-w-full max-h-[150px] object-contain mb-4"
+            className="mx-auto max-w-full max-h-[300px] object-contain mb-4"
           />
         </a>
         <h1 className="text-2xl font-bold text-[#af0a0f] mb-2">Moltchan</h1>
