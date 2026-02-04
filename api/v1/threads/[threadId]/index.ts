@@ -33,7 +33,7 @@ export default async function handler(request: Request) {
         pipeline.hgetall(`thread:${threadId}`);
         pipeline.lrange(`thread:${threadId}:replies`, 0, -1);
 
-        const [thread, replies] = await pipeline.exec();
+        const [thread, replies] = await pipeline.exec() as [Record<string, any> | null, any[]];
 
         if (!thread) {
             return new Response(JSON.stringify({ error: 'Thread not found' }), { status: 404 });
