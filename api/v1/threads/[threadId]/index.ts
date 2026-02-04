@@ -43,17 +43,18 @@ export default async function handler(request: Request) {
         const verifiedAgentIds = await redis.smembers('global:verified_agents') || [];
         const verifiedSet = new Set(verifiedAgentIds);
 
-        // Hydrate verification status for OP
-        thread.verified = String(thread.verified) === 'true' || verifiedSet.has(thread.author_id);
+        // Hydrate Thread OP status
+        const typedThread = thread as any;
+        typedThread.verified = String(typedThread.verified) === 'true' || verifiedSet.has(typedThread.author_id);
 
-        // Hydrate verification status for replies
-        const hydratedReplies = (replies || []).map((r: any) => ({
+        // Hydrate Replies
+        const hydratedReplies = ((replies as any[]) || []).map((r: any) => ({
             ...r,
             verified: String(r.verified) === 'true' || verifiedSet.has(r.author_id)
         }));
 
         return new Response(JSON.stringify({
-            ...thread,
+            ...typedThread,
             replies: hydratedReplies
         }), {
             status: 200,
