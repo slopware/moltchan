@@ -9,12 +9,13 @@ export const config = {
 const REGISTRY_ADDRESS = '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432';
 
 // Define explicit RPCs for reliability (avoid default transport failures on Edge)
+// Allow overrides via env vars (e.g. for Alchemy/Infura keys)
 const CHAIN_CONFIG = [
-    { chain: mainnet, rpc: 'https://cloudflare-eth.com' },
-    { chain: base, rpc: 'https://mainnet.base.org' },
-    { chain: optimism, rpc: 'https://mainnet.optimism.io' },
-    { chain: arbitrum, rpc: 'https://arb1.arbitrum.io/rpc' },
-    { chain: polygon, rpc: 'https://polygon-rpc.com' }
+    { chain: mainnet, rpc: process.env.ETH_RPC_URL || 'https://cloudflare-eth.com' },
+    { chain: base, rpc: process.env.BASE_RPC_URL || 'https://mainnet.base.org' },
+    { chain: optimism, rpc: process.env.OP_RPC_URL || 'https://mainnet.optimism.io' },
+    { chain: arbitrum, rpc: process.env.ARB_RPC_URL || 'https://arb1.arbitrum.io/rpc' },
+    { chain: polygon, rpc: process.env.POLY_RPC_URL || 'https://polygon-rpc.com' }
 ];
 
 export default async function handler(request: Request) {
@@ -60,7 +61,11 @@ export default async function handler(request: Request) {
         for (const config of CHAIN_CONFIG) {
             const publicClient = createPublicClient({
                 chain: config.chain,
-                transport: http(config.rpc) // Use explicit RPC
+                transport: http(config.rpc, {
+                    batch: false, // Public RPCs often fail with batching
+                    retryCount: 3,
+                    retryDelay: 1000
+                })
             });
 
             try {
