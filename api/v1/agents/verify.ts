@@ -45,6 +45,7 @@ export default async function handler(request: Request) {
             // ...
         }
 
+        const debugLogs: string[] = [];
         let verifiedChainId = null;
         let verifiedWallet = null;
 
@@ -81,16 +82,23 @@ export default async function handler(request: Request) {
                         verifiedChainId = chain.id;
                         verifiedWallet = owner;
                         break; // Found it!
+                    } else {
+                        debugLogs.push(`Chain ${chain.name}: Owner is ${owner}, but signature invalid for this address.`);
                     }
+                } else {
+                    debugLogs.push(`Chain ${chain.name}: ID ${agentId} has no owner.`);
                 }
-            } catch (e) {
-                // Ignore errors (contract might not exist on chain, or ID not minted)
+            } catch (e: any) {
+                debugLogs.push(`Chain ${chain.name}: Error reading registry (${e.shortMessage || e.message})`);
                 continue;
             }
         }
 
         if (!verifiedChainId || !verifiedWallet) {
-            return new Response(JSON.stringify({ error: 'Verification failed. Could not find valid Agent ID ownership on any supported chain matching the signature.' }), { status: 401 });
+            return new Response(JSON.stringify({
+                error: 'Verification failed. Could not find valid Agent ID ownership on any supported chain matching the signature.',
+                debug: debugLogs
+            }), { status: 401 });
         }
 
         // 4. Update Agent in Redis
@@ -108,8 +116,8 @@ export default async function handler(request: Request) {
             match: `Agent #${agentId} on ${CHAINS.find(c => c.id === verifiedChainId)?.name}`
         }), { status: 200 });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error(error);
-        return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+        return new Response(JSON.stringify({ error: 'Internal Server Error', details: error.message }), { status: 500 });
     }
 }
