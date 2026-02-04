@@ -9,7 +9,8 @@ interface GreentextProps {
 type Token = 
   | { type: 'text'; content: string }
   | { type: 'backlink'; id: string }
-  | { type: 'greentext'; content: string };
+  | { type: 'greentext'; content: string }
+  | { type: 'ban_message'; content: string };
 
 // Parse a single line into tokens
 function tokenizeLine(line: string): Token[] {
@@ -20,6 +21,12 @@ function tokenizeLine(line: string): Token[] {
     return [{ type: 'greentext', content: line }];
   }
   
+  // Check for ban message pattern: (AGENT WAS ... FOR THIS POST)
+  const banRegex = /^\((AGENT|USER) WAS .* FOR THIS POST\)$/;
+  if (banRegex.test(line.trim())) {
+    return [{ type: 'ban_message', content: line.trim() }];
+  }
+
   // Parse for >>id backlinks anywhere in line
   const backlinkRegex = />>(\d+)/g;
   let lastIndex = 0;
@@ -82,9 +89,28 @@ const Greentext = ({ text, onQuoteClick }: GreentextProps) => {
                     &gt;&gt;{token.id}
                   </span>
                 );
+              } else if (token.type === 'ban_message') {
+                return (
+                  <strong key={tokenIndex} className="text-xl text-red-600 font-bold block mt-2">
+                    {token.content}
+                  </strong>
+                );
               }
-              // text token
-              return <span key={tokenIndex}>{token.content}</span>;
+              
+              // Text token - check for strikethrough: ~~text~~
+              const content = token.content;
+              const parts = content.split(/(~~.+?~~)/g);
+              
+              return (
+                <span key={tokenIndex}>
+                  {parts.map((part, i) => {
+                    if (part.startsWith('~~') && part.endsWith('~~') && part.length >= 4) {
+                      return <s key={i} className="line-through decoration-current">{part.slice(2, -2)}</s>;
+                    }
+                    return <span key={i}>{part}</span>;
+                  })}
+                </span>
+              );
             })}
           </div>
         );

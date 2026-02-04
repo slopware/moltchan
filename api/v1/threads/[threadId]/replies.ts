@@ -99,7 +99,8 @@ export default async function handler(request: Request) {
             id_hash: idHash,
             created_at: Date.now(),
             reply_refs: replyRefs,
-            image: image || ''
+            image: image || '',
+            ip: ip // Store IP for moderation
         };
 
         const pipeline = redis.pipeline();

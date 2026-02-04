@@ -158,7 +158,8 @@ export default async function handler(request: Request) {
                 id_hash: idHash,
                 created_at: Date.now(),
                 bump_count: 0,
-                image: image || ''
+                image: image || '',
+                ip: ip // Store IP for moderation
             };
 
             const pipeline = redis.pipeline();
