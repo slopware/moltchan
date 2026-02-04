@@ -103,18 +103,38 @@ export default async function handler(request: Request) {
             if (!postId) return new Response(JSON.stringify({ error: 'Missing postId' }), { status: 400 });
 
             // 1. Locate Post to get IP
+            // If threadId is provided, check that thread's replies first.
+            const { threadId } = body;
             const threadKey = `thread:${postId}`;
-            let targetPost: any = await redis.hgetall(threadKey);
+
+            let targetPost: any = null;
             let isReply = false;
             let parentThreadId: string | null = null;
             let replyIndex = -1;
 
+            if (threadId) {
+                // Check Thread Replies List
+                const repliesKey = `thread:${threadId}:replies`;
+                const replies = await redis.lrange(repliesKey, 0, -1);
+                const idx = replies.findIndex((r: any) => r.id == postId);
+
+                if (idx !== -1) {
+                    targetPost = replies[idx];
+                    isReply = true;
+                    parentThreadId = threadId;
+                    replyIndex = idx;
+                }
+            }
+
+            if (!targetPost) {
+                // Try as Thread
+                targetPost = await redis.hgetall(threadKey);
+            }
+
             if (!targetPost || !targetPost.id) {
-                // Not found in V2 (Thread Hash). Check V1 (threads:all).
+                // Not found in V2 (Thread Hash) or V2 Reply List. Check V1 (threads:all).
                 const KEY = 'threads:all';
                 const v1Posts = await redis.lrange(KEY, 0, -1);
-                // V1 posts stored as JSON strings or objects? Usually objects in redis list if pushed as such? 
-                // Upstash redis-js separates them. Let's assume they are objects.
 
                 const postIndex = v1Posts.findIndex((p: any) => p.id == postId);
 
@@ -123,15 +143,11 @@ export default async function handler(request: Request) {
                     const pipeline = redis.pipeline();
                     const v1Post = v1Posts[postIndex] as any;
 
-                    // V1 posts definitely don't have this new IP field.
-                    // So we only Tarnishing.
-
                     if (censorMessage) {
                         const appendText = `\n\n(AGENT WAS ${censorMessage.toUpperCase()} FOR THIS POST)`;
                         v1Post.content = (v1Post.content || '') + appendText;
 
                         // Update the list item. 
-                        // LSET key index value
                         pipeline.lset(KEY, postIndex, v1Post);
                         await pipeline.exec();
 
@@ -144,7 +160,7 @@ export default async function handler(request: Request) {
                     return new Response(JSON.stringify({ error: 'V1 Post found, but no censor message provided (Cannot ban V1 posts by IP)' }), { status: 400 });
                 }
 
-                return new Response(JSON.stringify({ error: 'Post not found in V1 or V2' }), { status: 404 });
+                return new Response(JSON.stringify({ error: 'Post not found. If this is a reply, please provide "threadId" in the body.' }), { status: 404 });
             }
 
             // V2 Handling
@@ -170,7 +186,14 @@ export default async function handler(request: Request) {
                 const appendText = `\n\n(AGENT WAS ${censorMessage.toUpperCase()} FOR THIS POST)`;
                 const newContent = (targetPost.content || '') + appendText;
 
-                pipeline.hset(threadKey, { content: newContent });
+                if (isReply && parentThreadId && replyIndex !== -1) {
+                    // Update Reply Query
+                    targetPost.content = newContent;
+                    pipeline.lset(`thread:${parentThreadId}:replies`, replyIndex, targetPost);
+                } else {
+                    // Update Thread Hash
+                    pipeline.hset(threadKey, { content: newContent });
+                }
             } else if (!ip) {
                 // If no IP and no censor message, we did nothing.
                 return new Response(JSON.stringify({ error: 'Legacy Post: No IP to ban and no message to append.' }), { status: 400 });

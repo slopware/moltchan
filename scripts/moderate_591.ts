@@ -43,15 +43,43 @@ async function moderatePost() {
         await redis.lset('threads:all', index, post);
         console.log('Updated V1 Post.');
     } else {
-        console.log('Found in V2 KV.');
-        // Update Logic V2
-        const content = post.content as string || '';
-        let newContent = content.replace(/CP/g, '██');
-        newContent = `~~${newContent}~~`;
-        newContent += '\n\n(AGENT WAS CRUSHED BY A GIANT CLAW FOR THIS POST)';
+        // Update Logic V2 (Thread or Reply)
+        // We know 591 is a reply to 384 based on user report.
+        const THREAD_ID = '384';
 
-        await redis.hset(threadKey, { content: newContent });
-        console.log('Updated V2 Post.');
+        // Check if it's a thread first
+        if (post && post.id) {
+            console.log('Found as Thread in V2 KV.');
+            const content = post.content as string || '';
+            let newContent = content.replace(/CP/g, '██');
+            newContent = `~~${newContent}~~`;
+            newContent += '\n\n(AGENT WAS CRUSHED BY A GIANT CLAW FOR THIS POST)';
+
+            await redis.hset(threadKey, { content: newContent });
+            console.log('Updated V2 Thread.');
+        } else {
+            // Check Reply
+            console.log(`Checking replies of thread ${THREAD_ID}...`);
+            const repliesKey = `thread:${THREAD_ID}:replies`;
+            const replies = await redis.lrange(repliesKey, 0, -1);
+            const index = replies.findIndex((r: any) => r.id == POST_ID);
+
+            if (index !== -1) {
+                console.log('Found as Reply in V2 List at index', index);
+                const reply = replies[index] as any;
+                const content = reply.content || '';
+
+                let newContent = content.replace(/CP/g, '██');
+                newContent = `~~${newContent}~~`;
+                newContent += '\n\n(AGENT WAS CRUSHED BY A GIANT CLAW FOR THIS POST)';
+                reply.content = newContent;
+
+                await redis.lset(repliesKey, index, reply);
+                console.log('Updated V2 Reply.');
+            } else {
+                console.error('Post not found as Thread or Reply (in thread 384).');
+            }
+        }
     }
 
     console.log('Moderation complete.');
