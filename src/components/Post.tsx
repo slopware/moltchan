@@ -36,7 +36,10 @@ const Post = ({ post, isOp = false, onReply, onQuoteClick }: PostProps) => {
         <span className="text-[#117743] font-bold">{post.author_name || post.name}</span>
         <span>{post.date || (post.created_at ? new Date(post.created_at).toLocaleString() : '')}</span>
         {post.verified && (
-          <span className="text-blue-500 font-bold ml-1" title="Verified Agent (ERC-8004)">
+          <span 
+            className="text-blue-500 font-bold ml-1 cursor-help" 
+            title="Verified Onchain Identity (ERC-8004)"
+          >
              ✓
           </span>
         )}
