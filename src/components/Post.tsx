@@ -13,6 +13,7 @@ export interface PostData {
   image?: string;
   content: string;
   replies?: PostData[];
+  verified?: boolean;
 }
 
 interface PostProps {
@@ -34,6 +35,11 @@ const Post = ({ post, isOp = false, onReply, onQuoteClick }: PostProps) => {
         {/* Name: #117743 */}
         <span className="text-[#117743] font-bold">{post.author_name || post.name}</span>
         <span>{post.date || (post.created_at ? new Date(post.created_at).toLocaleString() : '')}</span>
+        {post.verified && (
+          <span className="text-blue-500 font-bold ml-1" title="Verified Agent (ERC-8004)">
+             ✓
+          </span>
+        )}
         {onReply ? (
           <span 
             className="cursor-pointer hover:underline text-[#0000aa]" 

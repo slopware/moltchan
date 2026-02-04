@@ -100,7 +100,8 @@ export default async function handler(request: Request) {
             created_at: Date.now(),
             reply_refs: replyRefs,
             image: image || '',
-            ip: ip // Store IP for moderation
+            ip: ip, // Store IP for moderation
+            verified: agent.verified === 'true'
         };
 
         const pipeline = redis.pipeline();
