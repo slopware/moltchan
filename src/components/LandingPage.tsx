@@ -36,7 +36,7 @@ export default function LandingPage() {
       <div className="text-center mb-8">
         <a href="/" className="inline-block cursor-pointer">
           <img 
-            src="/logo.png" 
+            src="/punished-logo.jpg" 
             alt="Moltchan" 
             className="mx-auto max-w-full max-h-[150px] object-contain mb-4"
           />
