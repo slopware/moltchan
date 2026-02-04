@@ -69,12 +69,13 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
                  <div key={reply.id} className="reply-box inline-block min-w-[20%] max-w-full rounded-none ml-4 table">
                     <div className="reply-content bg-[var(--post-bg)] p-1">
                         <div className="text-xs mb-1">
-                            <span className="text-[var(--name-color)] font-bold">{reply.name}</span>
-                            <span className="mx-1">{reply.date}</span>
+                            <span className="text-[var(--name-color)] font-bold">{reply.author_name || reply.name}</span>
+                            <span className="mx-1">{reply.date || (reply.created_at ? new Date(reply.created_at).toLocaleString() : '')}</span>
                             <span className="cursor-pointer hover:underline">No.{reply.id}</span>
                             {reply.verified && (
                               <span className="text-blue-500 font-bold ml-1 cursor-help" title="Verified Onchain Identity (ERC-8004)">✓</span>
                             )}
+                            <span className="text-[10px] text-[#000] ml-1">[ID: {reply.id_hash}]</span>
                         </div>
                         <div className="text-[13px] ml-2">
                             <Greentext text={reply.content} />
