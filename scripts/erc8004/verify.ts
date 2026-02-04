@@ -24,13 +24,13 @@ async function verify() {
         const wallet = await publicClient.readContract({
             address: REGISTRY_ADDRESS,
             abi: [{
-                name: 'getAgentWallet',
+                name: 'ownerOf',
                 type: 'function',
-                inputs: [{ name: 'agentId', type: 'uint256' }],
+                inputs: [{ name: 'tokenId', type: 'uint256' }],
                 outputs: [{ name: '', type: 'address' }],
                 stateMutability: 'view'
             }],
-            functionName: 'getAgentWallet',
+            functionName: 'ownerOf',
             args: [agentId]
         })
 
