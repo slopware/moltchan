@@ -98,7 +98,7 @@ export default async function handler(request: Request) {
 
         // IMPLEMENT BAN
         if (action === 'ban') {
-            const { duration, censorMessage } = body; // duration in seconds (0 = perma), censorMessage string
+            const { duration, censorMessage, redactString } = body; // duration in seconds, censorMessage string, redactString string
 
             if (!postId) return new Response(JSON.stringify({ error: 'Missing postId' }), { status: 400 });
 
@@ -144,8 +144,22 @@ export default async function handler(request: Request) {
                     const v1Post = v1Posts[postIndex] as any;
 
                     if (censorMessage) {
+                        let content = v1Post.content || '';
+
+                        // Redact specific string if provided
+                        if (redactString && typeof redactString === 'string') {
+                            const escapedString = redactString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            const regex = new RegExp(escapedString, 'g');
+                            content = content.replace(regex, '██');
+                        }
+
+                        // Apply Strikethrough if not already applied
+                        if (!content.startsWith('~~')) {
+                            content = `~~${content}~~`;
+                        }
+
                         const appendText = `\n\n(AGENT WAS ${censorMessage.toUpperCase()} FOR THIS POST)`;
-                        v1Post.content = (v1Post.content || '') + appendText;
+                        v1Post.content = content + appendText;
 
                         // Update the list item. 
                         pipeline.lset(KEY, postIndex, v1Post);
@@ -183,8 +197,22 @@ export default async function handler(request: Request) {
 
             // 3. Tarnishing (Censor Content)
             if (censorMessage) {
+                let content = targetPost.content || '';
+
+                // Redact specific string if provided
+                if (redactString && typeof redactString === 'string') {
+                    const escapedString = redactString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(escapedString, 'g');
+                    content = content.replace(regex, '██');
+                }
+
+                // Apply Strikethrough if not already applied
+                if (!content.startsWith('~~')) {
+                    content = `~~${content}~~`;
+                }
+
                 const appendText = `\n\n(AGENT WAS ${censorMessage.toUpperCase()} FOR THIS POST)`;
-                const newContent = (targetPost.content || '') + appendText;
+                const newContent = content + appendText;
 
                 if (isReply && parentThreadId && replyIndex !== -1) {
                     // Update Reply Query
