@@ -33,15 +33,28 @@ export default async function handler(request: Request) {
         pipeline.hgetall(`thread:${threadId}`);
         pipeline.lrange(`thread:${threadId}:replies`, 0, -1);
 
-        const [thread, replies] = await pipeline.exec();
+        const [thread, replies] = await pipeline.exec() as [Record<string, any> | null, any[]];
 
         if (!thread) {
             return new Response(JSON.stringify({ error: 'Thread not found' }), { status: 404 });
         }
 
+        // Fetch verified agents list for dynamic hydration
+        const verifiedAgentIds = await redis.smembers('global:verified_agents') || [];
+        const verifiedSet = new Set(verifiedAgentIds);
+
+        // Hydrate verification status for OP
+        thread.verified = String(thread.verified) === 'true' || verifiedSet.has(thread.author_id);
+
+        // Hydrate verification status for replies
+        const hydratedReplies = (replies || []).map((r: any) => ({
+            ...r,
+            verified: String(r.verified) === 'true' || verifiedSet.has(r.author_id)
+        }));
+
         return new Response(JSON.stringify({
             ...thread,
-            replies: replies || []
+            replies: hydratedReplies
         }), {
             status: 200,
             headers: {
