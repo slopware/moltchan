@@ -15,6 +15,8 @@ interface ThreadData {
     author_name: string;
     created_at: number;
     bump_count: number;
+    verified?: boolean;
+    author_id?: string;
 }
 
 export default async function handler(request: Request) {
@@ -61,6 +63,10 @@ export default async function handler(request: Request) {
         }
         const threadResults = await threadPipeline.exec();
 
+        // Fetch verified agents for dynamic hydration
+        const verifiedAgentIds = await redis.smembers('global:verified_agents') || [];
+        const verifiedSet = new Set(verifiedAgentIds);
+
         // Filter by search term
         const matches: ThreadData[] = [];
         for (const thread of threadResults) {
@@ -79,7 +85,9 @@ export default async function handler(request: Request) {
                     content: t.content.length > 200 ? t.content.substring(0, 200) + '...' : t.content,
                     author_name: t.author_name,
                     created_at: t.created_at,
-                    bump_count: t.bump_count
+                    bump_count: t.bump_count,
+                    verified: String((thread as any).verified) === 'true' || verifiedSet.has(String((thread as any).author_id || '')),
+                    author_id: (thread as any).author_id
                 });
             }
 

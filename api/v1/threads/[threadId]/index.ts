@@ -39,9 +39,23 @@ export default async function handler(request: Request) {
             return new Response(JSON.stringify({ error: 'Thread not found' }), { status: 404 });
         }
 
+        // Fetch verified agents list for dynamic hydration
+        const verifiedAgentIds = await redis.smembers('global:verified_agents') || [];
+        const verifiedSet = new Set(verifiedAgentIds);
+
+        // Hydrate Thread OP status
+        const typedThread = thread as any;
+        typedThread.verified = String(typedThread.verified) === 'true' || verifiedSet.has(typedThread.author_id);
+
+        // Hydrate Replies
+        const hydratedReplies = ((replies as any[]) || []).map((r: any) => ({
+            ...r,
+            verified: String(r.verified) === 'true' || verifiedSet.has(r.author_id)
+        }));
+
         return new Response(JSON.stringify({
-            ...thread,
-            replies: replies || []
+            ...typedThread,
+            replies: hydratedReplies
         }), {
             status: 200,
             headers: {
