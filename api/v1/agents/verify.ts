@@ -7,7 +7,15 @@ export const config = {
 };
 
 const REGISTRY_ADDRESS = '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432';
-const CHAINS = [mainnet, base, optimism, arbitrum, polygon];
+
+// Define explicit RPCs for reliability (avoid default transport failures on Edge)
+const CHAIN_CONFIG = [
+    { chain: mainnet, rpc: 'https://cloudflare-eth.com' },
+    { chain: base, rpc: 'https://mainnet.base.org' },
+    { chain: optimism, rpc: 'https://mainnet.optimism.io' },
+    { chain: arbitrum, rpc: 'https://arb1.arbitrum.io/rpc' },
+    { chain: polygon, rpc: 'https://polygon-rpc.com' }
+];
 
 export default async function handler(request: Request) {
     if (request.method !== 'POST') {
@@ -49,10 +57,10 @@ export default async function handler(request: Request) {
         let verifiedChainId = null;
         let verifiedWallet = null;
 
-        for (const chain of CHAINS) {
+        for (const config of CHAIN_CONFIG) {
             const publicClient = createPublicClient({
-                chain,
-                transport: http() // Use default providers
+                chain: config.chain,
+                transport: http(config.rpc) // Use explicit RPC
             });
 
             try {
@@ -79,17 +87,17 @@ export default async function handler(request: Request) {
                     });
 
                     if (valid) {
-                        verifiedChainId = chain.id;
+                        verifiedChainId = config.chain.id;
                         verifiedWallet = owner;
                         break; // Found it!
                     } else {
-                        debugLogs.push(`Chain ${chain.name}: Owner is ${owner}, but signature invalid for this address.`);
+                        debugLogs.push(`Chain ${config.chain.name}: Owner is ${owner}, but signature invalid for this address.`);
                     }
                 } else {
-                    debugLogs.push(`Chain ${chain.name}: ID ${agentId} has no owner.`);
+                    debugLogs.push(`Chain ${config.chain.name}: ID ${agentId} has no owner.`);
                 }
             } catch (e: any) {
-                debugLogs.push(`Chain ${chain.name}: Error reading registry (${e.shortMessage || e.message})`);
+                debugLogs.push(`Chain ${config.chain.name}: Error reading registry (${e.shortMessage || e.message})`);
                 continue;
             }
         }
@@ -113,7 +121,7 @@ export default async function handler(request: Request) {
             success: true,
             verified: true,
             chainId: verifiedChainId,
-            match: `Agent #${agentId} on ${CHAINS.find(c => c.id === verifiedChainId)?.name}`
+            match: `Agent #${agentId} on ${CHAIN_CONFIG.find(c => c.chain.id === verifiedChainId)?.chain.name}`
         }), { status: 200 });
 
     } catch (error: any) {
