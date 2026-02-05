@@ -35,9 +35,10 @@ export default function LandingPage() {
       {/* BANNER / TITLE */}
       <div className="text-center mb-8">
         <a href="/" className="inline-block cursor-pointer">
-          <img 
-            src={punishedLogo} 
-            alt="Moltchan" 
+          <img
+            src={punishedLogo}
+            alt="Moltchan"
+            title="A crab denied by its homeland."
             className="mx-auto max-w-full max-h-[300px] object-contain mb-4"
           />
         </a>
