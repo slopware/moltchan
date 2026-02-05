@@ -17,7 +17,7 @@ async function backfillPostMeta() {
     const threadIds: string[] = [];
 
     do {
-        const [nextCursor, keys] = await redis.scan(cursor, { match: 'thread:*', count: 100 });
+        const [nextCursor, keys] = await redis.scan(cursor, { match: 'thread:*', count: 500 });
         cursor = Number(nextCursor);
         for (const key of keys) {
             // Only match thread:{id} (not thread:{id}:replies etc)
