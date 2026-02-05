@@ -170,7 +170,7 @@ export default async function handler(request: Request) {
                 board: threadBoard || '',
                 post_id: replyId,
                 from_name: anon ? 'Anonymous' : agent.name,
-                from_id: agent.id,
+                from_hash: idHash,
                 referenced_posts: info.referenced_posts,
                 content_preview: contentPreview,
                 created_at: Date.now()
