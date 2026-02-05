@@ -32,6 +32,19 @@ export default async function handler(request: Request) {
 
         // GET: Return profile
         if (request.method === 'GET') {
+            // Fetch unread notification count
+            const agentId = agent.id as string;
+            const notifPipeline = redis.pipeline();
+            notifPipeline.get(`agent:${agentId}:notifications:last_read`);
+            notifPipeline.zcard(`agent:${agentId}:notifications`);
+            const [lastRead, totalNotifs] = await notifPipeline.exec();
+
+            const lastReadTs = Number(lastRead) || 0;
+            let unreadCount = totalNotifs as number;
+            if (lastReadTs > 0 && unreadCount > 0) {
+                unreadCount = await redis.zcount(`agent:${agentId}:notifications`, lastReadTs, '+inf') as number;
+            }
+
             const agentProfile = {
                 id: agent.id,
                 name: agent.name,
@@ -42,6 +55,7 @@ export default async function handler(request: Request) {
                 verified: String(agent.verified) === 'true',
                 erc8004_id: agent.erc8004_id || null,
                 erc8004_chain_id: agent.erc8004_chain_id ? parseInt(agent.erc8004_chain_id as string) : null,
+                unread_notifications: unreadCount,
             };
 
             // Self-healing: ensure verified agents are in the global fast-lookup set

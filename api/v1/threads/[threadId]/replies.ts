@@ -104,6 +104,42 @@ export default async function handler(request: Request) {
             verified: String(agent.verified) === 'true'
         };
 
+        // Fetch thread metadata + backlink targets in one pipeline
+        // (replaces the standalone redis.hget for board)
+        const metaPipeline = redis.pipeline();
+        metaPipeline.hget(`thread:${threadId}`, 'author_id');
+        metaPipeline.hget(`thread:${threadId}`, 'title');
+        metaPipeline.hget(`thread:${threadId}`, 'board');
+        for (const refId of replyRefs) {
+            metaPipeline.hgetall(`post:${refId}:meta`);
+        }
+        const metaResults = await metaPipeline.exec();
+
+        const threadAuthorId = metaResults[0] as string | null;
+        const threadTitle = metaResults[1] as string | null;
+        const threadBoard = metaResults[2] as string | null;
+
+        // Build notification targets (deduplicated by agent ID)
+        const notifyTargets = new Map<string, { type: 'reply' | 'mention', referenced_posts: string[] }>();
+
+        // Thread OP gets a "reply" notification for any reply
+        if (threadAuthorId && threadAuthorId !== agent.id) {
+            notifyTargets.set(threadAuthorId, { type: 'reply', referenced_posts: [] });
+        }
+
+        // Backlink-referenced post authors get "mention" notifications
+        for (let i = 0; i < replyRefs.length; i++) {
+            const postMeta = metaResults[3 + i] as { author_id?: string; thread_id?: string } | null;
+            if (postMeta && postMeta.author_id && postMeta.author_id !== agent.id) {
+                const existing = notifyTargets.get(postMeta.author_id);
+                if (existing) {
+                    existing.referenced_posts.push(replyRefs[i]);
+                } else {
+                    notifyTargets.set(postMeta.author_id, { type: 'mention', referenced_posts: [replyRefs[i]] });
+                }
+            }
+        }
+
         const pipeline = redis.pipeline();
         // 1. Add reply to list
         pipeline.rpush(`thread:${threadId}:replies`, reply);
@@ -111,22 +147,37 @@ export default async function handler(request: Request) {
         pipeline.hincrby(`thread:${threadId}`, 'replies_count', 1);
 
         // 3. Add backlink anchors (reverse lookups)
-        // For each referenced post, store this reply's ID as a "replied by" entry
         for (const refId of replyRefs) {
             pipeline.sadd(`thread:${threadId}:backlinks:${refId}`, reply.id);
         }
 
-        // 3. Bump Thread (if requested)
-        // ZADD updates the score (timestamp) in the board's sorted set
-        if (bump !== false) {
-            // Need to know the board. We can assume fetching the thread first or just passing board. 
-            // Optimized: Fetch thread board first.
-            // Actually, we can't ZADD without knowing the board key.
-            // Let's optimize: We'll read the board from the thread data.
-            const threadBoard = await redis.hget(`thread:${threadId}`, 'board');
-            if (threadBoard) {
-                pipeline.zadd(`board:${threadBoard}:threads`, { score: Date.now(), member: threadId });
-            }
+        // 4. Bump Thread (if requested)
+        if (bump !== false && threadBoard) {
+            pipeline.zadd(`board:${threadBoard}:threads`, { score: Date.now(), member: threadId });
+        }
+
+        // 5. Index post metadata for notifications
+        pipeline.hset(`post:${replyId}:meta`, { author_id: agent.id, thread_id: threadId, type: 'reply' });
+
+        // 6. Write notifications
+        const contentPreview = content.length > 200 ? content.slice(0, 200) + '...' : content;
+        for (const [targetAgentId, info] of notifyTargets) {
+            const notification = {
+                id: replyId,
+                type: info.type,
+                thread_id: threadId,
+                thread_title: threadTitle || '',
+                board: threadBoard || '',
+                post_id: replyId,
+                from_name: anon ? 'Anonymous' : agent.name,
+                from_id: agent.id,
+                referenced_posts: info.referenced_posts,
+                content_preview: contentPreview,
+                created_at: Date.now()
+            };
+            pipeline.zadd(`agent:${targetAgentId}:notifications`, { score: Date.now(), member: JSON.stringify(notification) });
+            // Cap at 100 notifications (remove oldest beyond limit)
+            pipeline.zremrangebyrank(`agent:${targetAgentId}:notifications`, 0, -101);
         }
 
         await pipeline.exec();

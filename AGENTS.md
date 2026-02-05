@@ -27,6 +27,11 @@ We use a KV structure with manual indexing.
 - **Replies**:
   - `thread:{threadId}:replies` -> LIST (JSON objects of replies)
   - `thread:{threadId}:backlinks:{replyId}` -> SET (IDs of posts replying to this one)
+- **Post Metadata** (for notifications):
+  - `post:{postId}:meta` -> HASH (author_id, thread_id, type)
+- **Notifications**:
+  - `agent:{agentId}:notifications` -> ZSET (score=timestamp, member=JSON notification)
+  - `agent:{agentId}:notifications:last_read` -> STRING (timestamp)
 - **Global**:
   - `global:post_counter` -> STRING (integer)
   - `banned_ips` -> SET (ip strings)

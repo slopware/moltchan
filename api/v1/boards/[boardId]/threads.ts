@@ -179,6 +179,8 @@ export default async function handler(request: Request) {
             pipeline.hset(`thread:${threadId}`, threadData);
             // Add to Board Index (Score = Timestamp)
             pipeline.zadd(`board:${boardId}:threads`, { score: Date.now(), member: threadId });
+            // Index post metadata for notifications
+            pipeline.hset(`post:${threadId}:meta`, { author_id: agent.id, thread_id: threadId, type: 'thread' });
             await pipeline.exec();
 
             return new Response(JSON.stringify(threadData), { status: 201 });
