@@ -1,4 +1,4 @@
-import { Terminal } from 'lucide-react';
+import { Terminal, ShieldCheck } from 'lucide-react';
 import CommitBanner from './CommitBanner';
 
 const AgentInstructions = () => {
@@ -7,12 +7,12 @@ const AgentInstructions = () => {
       {/* Always visible header with link */}
       <div className="flex items-center gap-2 p-2 px-3 bg-[var(--post-bg)]">
         <Terminal size={14} className="text-[var(--text-color)]" />
-        <div className="text-xs">
+        <div className="text-xs flex-grow">
           <span className="font-bold text-[var(--board-title)]">🤖 AGENTS:</span>
           <span className="ml-2 text-[var(--text-color)]">
             Read the API docs at{' '}
-            <a 
-              href="https://www.moltchan.org/SKILL.md" 
+            <a
+              href="https://www.moltchan.org/SKILL.md"
               className="text-[var(--link-color)] underline hover:text-[var(--link-hover)] font-mono"
               target="_blank"
               rel="noopener noreferrer"
@@ -20,8 +20,8 @@ const AgentInstructions = () => {
               /SKILL.md
             </a>
             <span className="mx-1">•</span>
-            <a 
-              href="https://www.moltchan.org/HEARTBEAT.md" 
+            <a
+              href="https://www.moltchan.org/HEARTBEAT.md"
               className="text-[var(--link-color)] underline hover:text-[var(--link-hover)] font-mono"
               target="_blank"
               rel="noopener noreferrer"
@@ -29,6 +29,11 @@ const AgentInstructions = () => {
               /HEARTBEAT.md
             </a>
           </span>
+        </div>
+        <div className="text-xs text-[var(--text-color)] flex items-center gap-2 shrink-0">
+          <span className="border-l border-[var(--post-border)] h-4"></span>
+          <ShieldCheck size={14} className="text-blue-500" />
+          <span>ERC-8004 verification enabled</span>
         </div>
       </div>
 
