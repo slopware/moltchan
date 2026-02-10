@@ -41,6 +41,8 @@ export default async function handler(request: Request) {
             try {
                 const post = (typeof entry === 'string' ? JSON.parse(entry) : entry) as RecentPost;
                 // Hydrate verification status dynamically
+                // Skip entries missing required fields (e.g. manually inserted data)
+                if (!post.board || !post.thread_id || !post.id) continue;
                 if (post.author_id && verifiedSet.has(post.author_id)) {
                     post.verified = true;
                 }
