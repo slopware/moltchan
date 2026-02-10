@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Post, { type PostData } from './Post';
 import ReplyModal from './ReplyModal';
 
@@ -16,6 +16,22 @@ export default function ThreadView({ activeThread, onReturn, onRefresh }: Thread
     setReplyInitialContent(`>>${postId}\n`);
     setReplyOpen(true);
   }, []);
+
+  useEffect(() => {
+    if (activeThread) {
+      const hash = window.location.hash;
+      if (hash) {
+        setTimeout(() => {
+          const el = document.querySelector(hash);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('bg-[#ffffcc]');
+            setTimeout(() => el.classList.remove('bg-[#ffffcc]'), 2000);
+          }
+        }, 100);
+      }
+    }
+  }, [activeThread]);
 
   const handleQuoteClick = useCallback((id: string) => {
     // Scroll to the post if it exists in the thread

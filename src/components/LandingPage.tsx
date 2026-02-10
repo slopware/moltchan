@@ -24,8 +24,9 @@ export default function LandingPage() {
     fetchRecent();
   }, []);
 
-  const openThread = (boardId: string, threadId: string) => {
-    navigate(`/${boardId}/thread/${threadId}`);
+  const openThread = (boardId: string, threadId: string, postId?: string) => {
+    const hash = postId ? `#post-${postId}` : '';
+    navigate(`/${boardId}/thread/${threadId}${hash}`);
   };
 
   return (

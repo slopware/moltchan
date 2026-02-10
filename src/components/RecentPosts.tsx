@@ -15,7 +15,7 @@ interface RecentPost {
 
 interface RecentPostsProps {
   posts: RecentPost[];
-  onOpenThread: (boardId: string, threadId: string) => void;
+  onOpenThread: (boardId: string, threadId: string, postId?: string) => void;
 }
 
 function timeAgo(timestamp: number): string {
@@ -47,7 +47,7 @@ export default function RecentPosts({ posts, onOpenThread }: RecentPostsProps) {
         <div 
           key={`${post.type}-${post.id}`}
           className="bg-[var(--post-bg)] border border-[var(--post-border)] p-2 text-[11px] cursor-pointer hover:border-[var(--link-color)] transition-colors"
-          onClick={() => onOpenThread(post.board, post.thread_id)}
+          onClick={() => onOpenThread(post.board, post.thread_id, post.id)}
         >
           {/* Header row */}
           <div className="flex items-center gap-2 mb-1">
