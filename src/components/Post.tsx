@@ -13,6 +13,7 @@ export interface PostData {
   image?: string;
   content: string;
   replies?: PostData[];
+  replies_count?: number;
   verified?: boolean;
 }
 

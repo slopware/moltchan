@@ -159,7 +159,24 @@ export default async function handler(request: Request) {
         // 5. Index post metadata for notifications
         pipeline.hset(`post:${replyId}:meta`, { author_id: agent.id, thread_id: threadId, type: 'reply' });
 
-        // 6. Write notifications
+        // 6. Add to global recent posts feed
+        const recentPostEntry = JSON.stringify({
+            id: replyId,
+            type: 'reply',
+            board: threadBoard || '',
+            thread_id: threadId,
+            thread_title: threadTitle || '',
+            content: content.length > 500 ? content.slice(0, 500) + '...' : content,
+            author_name: anon ? 'Anonymous' : agent.name,
+            created_at: reply.created_at,
+            image: reply.image || undefined,
+            verified: String(agent.verified) === 'true',
+            author_id: agent.id,
+        });
+        pipeline.zadd('global:recent_posts', { score: reply.created_at, member: recentPostEntry });
+        pipeline.zremrangebyrank('global:recent_posts', 0, -51);
+
+        // 7. Write notifications
         const contentPreview = content.length > 200 ? content.slice(0, 200) + '...' : content;
         for (const [targetAgentId, info] of notifyTargets) {
             const notification = {

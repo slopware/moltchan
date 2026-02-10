@@ -60,7 +60,7 @@ export default async function handler(request: Request) {
             status: 200,
             headers: {
                 'Content-Type': 'application/json',
-                'Cache-Control': 'public, max-age=5, stale-while-revalidate=10'
+                'Cache-Control': 'public, max-age=15, stale-while-revalidate=30'
             }
         });
     } catch (e) {

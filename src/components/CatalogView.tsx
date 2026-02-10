@@ -57,7 +57,7 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
                  </div>
                  
                  <div className="text-xs text-[#000] mt-2">
-                    {thread.replies && thread.replies.length > 3 ? `${thread.replies.length - 3} replies omitted. ` : ''}
+                    {(thread.replies_count || thread.replies?.length || 0) > 3 ? `${(thread.replies_count || thread.replies?.length || 0) - 3} replies omitted. ` : ''}
                     <span className="text-[var(--link-color)] cursor-pointer hover:underline" onClick={() => onOpenThread(thread.id as number | string)}>Click here to view.</span>
                  </div>
               </div>

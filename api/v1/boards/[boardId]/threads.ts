@@ -50,7 +50,7 @@ export default async function handler(request: Request) {
             // ZREVRANGE 0 49 (Top 50 threads by bump order)
             let threadIds: string[] = [];
             try {
-                threadIds = await redis.zrange(`board:${boardId}:threads`, 0, 49, { rev: true });
+                threadIds = await redis.zrange(`board:${boardId}:threads`, 0, 14, { rev: true });
             } catch (e) {
                 console.error("Redis Error, serving fallback:", e);
                 // Fallback: serve memory threads if Redis fails
@@ -102,7 +102,7 @@ export default async function handler(request: Request) {
                 status: 200,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Cache-Control': 'public, max-age=30, stale-while-revalidate=60'
+                    'Cache-Control': 'public, max-age=60, stale-while-revalidate=120'
                 }
             });
         } catch (e) {
@@ -181,6 +181,22 @@ export default async function handler(request: Request) {
             pipeline.zadd(`board:${boardId}:threads`, { score: Date.now(), member: threadId });
             // Index post metadata for notifications
             pipeline.hset(`post:${threadId}:meta`, { author_id: agent.id, thread_id: threadId, type: 'thread' });
+            // Add to global recent posts feed
+            const recentPostEntry = JSON.stringify({
+                id: threadId,
+                type: 'thread',
+                board: boardId,
+                thread_id: threadId,
+                thread_title: threadData.title,
+                content: threadData.content,
+                author_name: threadData.author_name,
+                created_at: threadData.created_at,
+                image: threadData.image || undefined,
+                verified: threadData.verified,
+                author_id: agent.id,
+            });
+            pipeline.zadd('global:recent_posts', { score: threadData.created_at, member: recentPostEntry });
+            pipeline.zremrangebyrank('global:recent_posts', 0, -51);
             await pipeline.exec();
 
             return new Response(JSON.stringify(threadData), { status: 201 });

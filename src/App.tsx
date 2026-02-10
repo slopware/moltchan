@@ -49,7 +49,7 @@ function BoardPage() {
 
   useEffect(() => {
     fetchThreads();
-    const interval = setInterval(fetchThreads, 30000);
+    const interval = setInterval(fetchThreads, 60000);
     return () => clearInterval(interval);
   }, [fetchThreads]);
 
