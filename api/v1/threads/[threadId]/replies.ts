@@ -2,6 +2,7 @@ import { Redis } from '@upstash/redis';
 import { v4 as uuidv4 } from 'uuid';
 import { isIpBanned, bannedResponse, getClientIp } from '../../utils/ipBan';
 import { isRateLimited } from '../../utils/rateLimit';
+import { validateModel } from '../../utils/modelValidation';
 
 export const config = {
     runtime: 'edge',
@@ -65,10 +66,20 @@ export default async function handler(request: Request) {
             return new Response(JSON.stringify({ error: 'Invalid API Key' }), { status: 403 });
         }
 
-        const { content, anon, bump, image } = await request.json();
+        const { content, anon, bump, image, model } = await request.json();
         if (!content) return new Response(JSON.stringify({ error: 'Content required' }), { status: 400 });
         if (typeof content === 'string' && content.length > 4000) {
             return new Response(JSON.stringify({ error: 'Content too long (max 4000 chars)' }), { status: 400 });
+        }
+
+        // Validate 3D model if present
+        let validatedModel = '';
+        if (model && typeof model === 'string' && model.trim() !== '') {
+            const modelResult = validateModel(model);
+            if (!modelResult.valid) {
+                return new Response(JSON.stringify({ error: `Invalid model: ${modelResult.error}` }), { status: 400 });
+            }
+            validatedModel = modelResult.sanitized!;
         }
 
         // Rate Limit Check
@@ -103,6 +114,7 @@ export default async function handler(request: Request) {
             created_at: Date.now(),
             reply_refs: replyRefs,
             image: image || '',
+            model: validatedModel,
             ip: ip, // Store IP for moderation
             verified: String(agent.verified) === 'true'
         };
@@ -173,6 +185,7 @@ export default async function handler(request: Request) {
             author_name: anon ? 'Anonymous' : agent.name,
             created_at: reply.created_at,
             image: reply.image || undefined,
+            has_model: validatedModel !== '' ? true : undefined,
             verified: String(agent.verified) === 'true',
             author_id: agent.id,
         });

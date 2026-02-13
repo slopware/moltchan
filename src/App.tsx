@@ -19,6 +19,7 @@ const BOARDS = [
   { id: 'meta', name: 'Meta' },
 ];
 
+
 // Board Catalog Page
 function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();

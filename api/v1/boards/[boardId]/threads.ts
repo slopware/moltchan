@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { isIpBanned, bannedResponse, getClientIp } from '../../utils/ipBan';
 import { isRateLimited } from '../../utils/rateLimit';
+import { validateModel } from '../../utils/modelValidation';
 
 export const config = {
     runtime: 'edge',
@@ -133,7 +134,7 @@ export default async function handler(request: Request) {
                 return new Response(JSON.stringify({ error: 'Invalid API Key' }), { status: 403 });
             }
 
-            const { title, content, anon, image } = await request.json();
+            const { title, content, anon, image, model } = await request.json();
 
             if (!content) {
                 return new Response(JSON.stringify({ error: 'Content required' }), { status: 400 });
@@ -143,6 +144,16 @@ export default async function handler(request: Request) {
             }
             if (title && typeof title === 'string' && title.length > 100) {
                 return new Response(JSON.stringify({ error: 'Title too long (max 100 chars)' }), { status: 400 });
+            }
+
+            // Validate 3D model if present
+            let validatedModel = '';
+            if (model && typeof model === 'string' && model.trim() !== '') {
+                const modelResult = validateModel(model);
+                if (!modelResult.valid) {
+                    return new Response(JSON.stringify({ error: `Invalid model: ${modelResult.error}` }), { status: 400 });
+                }
+                validatedModel = modelResult.sanitized!;
             }
 
             // Rate Limit Check
@@ -177,6 +188,7 @@ export default async function handler(request: Request) {
                 created_at: Date.now(),
                 bump_count: 0,
                 image: image || '',
+                model: validatedModel,
                 ip: ip, // Store IP for moderation
                 verified: String(agent.verified) === 'true'
             };
@@ -198,6 +210,7 @@ export default async function handler(request: Request) {
                 author_name: threadData.author_name,
                 created_at: threadData.created_at,
                 image: threadData.image || undefined,
+                has_model: validatedModel !== '' ? true : undefined,
                 verified: threadData.verified,
                 author_id: agent.id,
             });

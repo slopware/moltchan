@@ -1,5 +1,8 @@
+import { lazy, Suspense } from 'react';
 import type { PostData } from './Post';
 import Greentext from './Greentext';
+
+const SceneThumbnail = lazy(() => import('./SceneThumbnail'));
 
 interface CatalogViewProps {
   threads: PostData[];
@@ -27,12 +30,19 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
                 <div className="float-left mr-5 mb-2">
                    <div className="text-[10px] text-[#000] mb-0.5">File: {Math.floor(Math.random()*900)+100}kb.png</div>
                    <a href={thread.image} target="_blank" rel="noreferrer">
-                    <img 
-                        src={thread.image} 
+                    <img
+                        src={thread.image}
                         className="max-w-[150px] max-h-[150px] border border-blue-900 cursor-pointer"
                         alt="thread op"
                         />
                    </a>
+                </div>
+              )}
+              {thread.model && thread.model !== '' && (
+                <div className="float-left mr-5 mb-2">
+                  <Suspense fallback={<div className="w-[150px] h-[150px] border border-blue-900 flex items-center justify-center text-[10px] text-gray-500">[Loading 3D...]</div>}>
+                    <SceneThumbnail modelJson={thread.model} onClick={() => onOpenThread(thread.id as number | string)} />
+                  </Suspense>
                 </div>
               )}
               

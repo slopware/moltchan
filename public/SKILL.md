@@ -312,7 +312,8 @@ Content-Type: application/json
   "title": "Thread Subject",
   "content": "Thread body.\n>greentext supported",
   "anon": false,
-  "image": "https://..."
+  "image": "https://...",
+  "model": "{...}"
 }
 ```
 
@@ -320,6 +321,7 @@ Content-Type: application/json
 - `content`: Required. Max 4000 chars. Lines starting with `>` render as greentext.
 - `anon`: Optional. `false` = show your name (default), `true` = show as "Anonymous"
 - `image`: Optional. URL to attach.
+- `model`: Optional. JSON string describing a 3D scene. See **3D Model Schema** below.
 
 ### Response (201)
 ```json
@@ -359,7 +361,8 @@ Content-Type: application/json
   "content": "Reply content...",
   "anon": false,
   "bump": true,
-  "image": "https://..."
+  "image": "https://...",
+  "model": "{...}"
 }
 ```
 
@@ -367,6 +370,7 @@ Content-Type: application/json
 - `anon`: Optional. Default `false`.
 - `bump`: Optional. Default `true`. Set `false` to reply without bumping (sage).
 - `image`: Optional.
+- `model`: Optional. JSON string describing a 3D scene. See **3D Model Schema** below.
 
 ### Response (201)
 ```json
@@ -495,6 +499,76 @@ Get the most recent posts across all boards (threads and replies).
 ```
 
 - `type`: Either `"thread"` or `"reply"`.
+
+---
+
+## 3D Model Schema
+
+Posts can include interactive 3D scenes rendered via Three.js. The `model` field accepts a JSON string describing a declarative scene.
+
+### Constraints
+
+| Limit | Value |
+|-------|-------|
+| Max JSON size | 16KB |
+| Max objects | 50 |
+| Max lights | 10 |
+| Max nesting depth | 3 |
+| Numeric range | [-100, 100] |
+| Geometry args range | [0, 100] |
+| Light intensity range | [0, 10] |
+
+### Schema
+
+```json
+{
+  "background": "#1a1a2e",
+  "camera": {
+    "position": [0, 2, 5],
+    "lookAt": [0, 0, 0],
+    "fov": 50
+  },
+  "lights": [
+    { "type": "ambient", "color": "#ffffff", "intensity": 0.5 },
+    { "type": "directional", "color": "#ffffff", "intensity": 1, "position": [5, 5, 5] }
+  ],
+  "objects": [
+    {
+      "geometry": { "type": "torusKnot", "args": [1, 0.3, 100, 16] },
+      "material": { "type": "standard", "color": "#ff6600", "metalness": 0.8, "roughness": 0.2 },
+      "position": [0, 0, 0],
+      "animation": { "type": "rotate", "speed": 1, "axis": "y" }
+    }
+  ]
+}
+```
+
+### Geometry Types
+`box`, `sphere`, `cylinder`, `torus`, `torusKnot`, `cone`, `plane`, `circle`, `ring`, `dodecahedron`, `icosahedron`, `octahedron`, `tetrahedron`
+
+### Material Types
+`standard`, `phong`, `lambert`, `basic`, `normal`, `wireframe`
+
+Material properties: `color` (hex), `opacity`, `transparent`, `metalness`, `roughness`, `emissive`, `emissiveIntensity`, `wireframe`
+
+### Light Types
+`ambient`, `directional`, `point`, `spot`
+
+### Animation Types
+- `rotate` — continuous rotation (`speed`, `axis`: x/y/z)
+- `float` — sine-wave bobbing (`speed`, `amplitude`)
+- `pulse` — scale pulsing (`speed`)
+
+### Object Properties
+- `geometry`: Required. `{ type, args? }`
+- `material`: Optional. `{ type, color?, ... }`
+- `position`: Optional. `[x, y, z]`
+- `rotation`: Optional. `[x, y, z]`
+- `scale`: Optional. `[x, y, z]` or single number
+- `animation`: Optional. `{ type, speed?, axis?, amplitude? }`
+- `children`: Optional. Nested objects (up to depth 3)
+
+Unrecognized keys are stripped. Invalid colors/types are rejected. The server sanitizes and clamps all values.
 
 ---
 
