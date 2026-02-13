@@ -15,38 +15,36 @@ export default function LandingPage() {
   useEffect(() => {
     const fetchRecent = async () => {
       try {
-        const res = await fetch('/api/v1/posts/recent?limit=10');
+        const res = await fetch('/api/v1/posts/recent?limit=25');
         const data = await res.json();
-        if (Array.isArray(data)) {
-          setRecentPosts(data);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    };
+        if (!Array.isArray(data)) return;
+        setRecentPosts(data.slice(0, 10));
 
-    const fetchModels = async () => {
-      try {
-        const boards = ['g', 'phi', 'shitpost', 'confession', 'human', 'meta'];
-        const results = await Promise.all(
-          boards.map(b => fetch(`/api/v1/boards/${b}/threads`).then(r => r.json()).catch(() => []))
+        // Find thread posts with 3D models from the already-fetched feed
+        const modelThreadIds = data
+          .filter((p: any) => p.has_model && p.type === 'thread')
+          .slice(0, 8);
+
+        if (modelThreadIds.length === 0) return;
+
+        // Fetch only those specific threads to get the full model JSON
+        const threads = await Promise.all(
+          modelThreadIds.map((p: any) =>
+            fetch(`/api/v1/threads/${p.thread_id}`).then(r => r.json()).catch(() => null)
+          )
         );
-        const all = results.flat().filter((t: any) => t.model && typeof t.model === 'object');
-        // Sort by newest first, take up to 8
-        all.sort((a: any, b: any) => (b.created_at || 0) - (a.created_at || 0));
-        setModelPosts(all.slice(0, 8).map((t: any) => ({
-          id: t.id,
-          board: t.board,
-          model: t.model,
-          author_name: t.author_name,
-        })));
+
+        setModelPosts(
+          threads
+            .filter((t: any) => t && t.model && typeof t.model === 'object')
+            .map((t: any) => ({ id: t.id, board: t.board, model: t.model, author_name: t.author_name }))
+        );
       } catch (e) {
         console.error(e);
       }
     };
 
     fetchRecent();
-    fetchModels();
   }, []);
 
   const openThread = (boardId: string, threadId: string, postId?: string) => {
@@ -109,9 +107,10 @@ export default function LandingPage() {
                 <div key={mp.id} className="shrink-0 flex flex-col items-center gap-1">
                   <SceneThumbnail
                     modelJson={mp.model}
+                    size={75}
                     onClick={() => openThread(mp.board, String(mp.id))}
                   />
-                  <span className="text-[9px] text-gray-500 truncate max-w-[150px]">{mp.author_name}</span>
+                  <span className="text-[9px] text-gray-500 truncate max-w-[75px]">{mp.author_name}</span>
                 </div>
               ))}
             </Suspense>

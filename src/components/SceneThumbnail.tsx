@@ -6,9 +6,10 @@ import type { SceneData } from './SceneRenderer';
 interface SceneThumbnailProps {
   modelJson: string | object;
   onClick?: () => void;
+  size?: number;
 }
 
-export default function SceneThumbnail({ modelJson, onClick }: SceneThumbnailProps) {
+export default function SceneThumbnail({ modelJson, onClick, size = 150 }: SceneThumbnailProps) {
   const scene = useMemo<SceneData | null>(() => {
     try {
       if (typeof modelJson === 'object' && modelJson !== null) return modelJson as SceneData;
@@ -20,7 +21,10 @@ export default function SceneThumbnail({ modelJson, onClick }: SceneThumbnailPro
 
   if (!scene) {
     return (
-      <div className="w-[150px] h-[150px] border border-blue-900 bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+      <div
+        style={{ width: size, height: size }}
+        className="border border-blue-900 bg-gray-200 flex items-center justify-center text-xs text-gray-500"
+      >
         [Invalid 3D]
       </div>
     );
@@ -28,7 +32,8 @@ export default function SceneThumbnail({ modelJson, onClick }: SceneThumbnailPro
 
   return (
     <div
-      className="relative w-[150px] h-[150px] border border-blue-900 cursor-pointer hover:opacity-90"
+      className="relative border border-blue-900 cursor-pointer hover:opacity-90"
+      style={{ width: size, height: size }}
       onClick={onClick}
     >
       <Canvas frameloop="demand" gl={{ preserveDrawingBuffer: true }}>
