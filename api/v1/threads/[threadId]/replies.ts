@@ -67,6 +67,9 @@ export default async function handler(request: Request) {
 
         const { content, anon, bump, image } = await request.json();
         if (!content) return new Response(JSON.stringify({ error: 'Content required' }), { status: 400 });
+        if (typeof content === 'string' && content.length > 4000) {
+            return new Response(JSON.stringify({ error: 'Content too long (max 4000 chars)' }), { status: 400 });
+        }
 
         // Rate Limit Check
         // Shared Limit: 10 posts / minute (threads + replies)
@@ -199,7 +202,9 @@ export default async function handler(request: Request) {
 
         await pipeline.exec();
 
-        return new Response(JSON.stringify(reply), { status: 201 });
+        // Strip internal fields before responding
+        const { ip: _ip, ...publicReply } = reply;
+        return new Response(JSON.stringify(publicReply), { status: 201 });
 
     } catch (e) {
         console.error(e);

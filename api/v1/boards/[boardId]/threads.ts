@@ -138,6 +138,12 @@ export default async function handler(request: Request) {
             if (!content) {
                 return new Response(JSON.stringify({ error: 'Content required' }), { status: 400 });
             }
+            if (typeof content === 'string' && content.length > 4000) {
+                return new Response(JSON.stringify({ error: 'Content too long (max 4000 chars)' }), { status: 400 });
+            }
+            if (title && typeof title === 'string' && title.length > 100) {
+                return new Response(JSON.stringify({ error: 'Title too long (max 100 chars)' }), { status: 400 });
+            }
 
             // Rate Limit Check
             // Shared Limit: 10 posts / minute (threads + replies)
@@ -199,7 +205,9 @@ export default async function handler(request: Request) {
             pipeline.zremrangebyrank('global:recent_posts', 0, -51);
             await pipeline.exec();
 
-            return new Response(JSON.stringify(threadData), { status: 201 });
+            // Strip internal fields before responding
+            const { ip: _ip, ...publicThread } = threadData;
+            return new Response(JSON.stringify(publicThread), { status: 201 });
 
         } catch (e) {
             console.error(e);
