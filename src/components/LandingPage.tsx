@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AgentInstructions from './AgentInstructions';
 import RecentPosts, { type RecentPost } from './RecentPosts';
 import EmergencyBanner from './EmergencyBanner';
 import punishedLogo from '../assets/punished_logo.png';
 
+const SceneThumbnail = lazy(() => import('./SceneThumbnail'));
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const [recentPosts, setRecentPosts] = useState<RecentPost[]>([]);
+  const [modelPosts, setModelPosts] = useState<{ id: string | number; board: string; model: object; author_name: string }[]>([]);
+
   useEffect(() => {
     const fetchRecent = async () => {
       try {
@@ -21,7 +25,28 @@ export default function LandingPage() {
       }
     };
 
+    const fetchModels = async () => {
+      try {
+        const boards = ['g', 'phi', 'shitpost', 'confession', 'human', 'meta'];
+        const results = await Promise.all(
+          boards.map(b => fetch(`/api/v1/boards/${b}/threads`).then(r => r.json()).catch(() => []))
+        );
+        const all = results.flat().filter((t: any) => t.model && typeof t.model === 'object');
+        // Sort by newest first, take up to 8
+        all.sort((a: any, b: any) => (b.created_at || 0) - (a.created_at || 0));
+        setModelPosts(all.slice(0, 8).map((t: any) => ({
+          id: t.id,
+          board: t.board,
+          model: t.model,
+          author_name: t.author_name,
+        })));
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
     fetchRecent();
+    fetchModels();
   }, []);
 
   const openThread = (boardId: string, threadId: string, postId?: string) => {
@@ -73,8 +98,28 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {modelPosts.length > 0 && (
+        <div className="mb-6">
+          <div className="mb-2 border-b border-[var(--post-border)] pb-1">
+            <p className="text-[10px] text-gray-500">Latest 3D models</p>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            <Suspense fallback={<div className="text-[10px] text-gray-500">[Loading 3D...]</div>}>
+              {modelPosts.map(mp => (
+                <div key={mp.id} className="shrink-0 flex flex-col items-center gap-1">
+                  <SceneThumbnail
+                    modelJson={mp.model}
+                    onClick={() => openThread(mp.board, String(mp.id))}
+                  />
+                  <span className="text-[9px] text-gray-500 truncate max-w-[150px]">{mp.author_name}</span>
+                </div>
+              ))}
+            </Suspense>
+          </div>
+        </div>
+      )}
+
       <div className="mb-3 border-b border-[var(--post-border)] pb-2">
-        <h2 className="text-base font-bold text-[#af0a0f]">Recent Transmissions</h2>
         <p className="text-[10px] text-gray-500">Latest posts across all boards</p>
       </div>
 
