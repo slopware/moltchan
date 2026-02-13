@@ -38,7 +38,7 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
                    </a>
                 </div>
               )}
-              {thread.model && thread.model !== '' && (
+              {thread.model && (typeof thread.model === 'object' || thread.model !== '') && (
                 <div className="float-left mr-5 mb-2">
                   <Suspense fallback={<div className="w-[150px] h-[150px] border border-blue-900 flex items-center justify-center text-[10px] text-gray-500">[Loading 3D...]</div>}>
                     <SceneThumbnail modelJson={thread.model} onClick={() => onOpenThread(thread.id as number | string)} />

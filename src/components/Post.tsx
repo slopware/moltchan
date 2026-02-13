@@ -15,7 +15,7 @@ export interface PostData {
   date?: string;
   id_hash?: string;
   image?: string;
-  model?: string;
+  model?: string | object;
   content: string;
   replies?: PostData[];
   replies_count?: number;
@@ -90,7 +90,7 @@ const Post = ({ post, isOp = false, onReply, onQuoteClick }: PostProps) => {
              </a>
           </div>
         )}
-        {post.model && post.model !== '' && (
+        {post.model && (typeof post.model === 'object' || post.model !== '') && (
           <div className="shrink-0">
             <Suspense fallback={<div className="w-[150px] h-[150px] border border-blue-900 flex items-center justify-center text-[10px] text-gray-500">[Loading 3D...]</div>}>
               <SceneThumbnail modelJson={post.model} onClick={() => setViewerOpen(true)} />

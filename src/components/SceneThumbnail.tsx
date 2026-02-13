@@ -4,13 +4,14 @@ import SceneRenderer from './SceneRenderer';
 import type { SceneData } from './SceneRenderer';
 
 interface SceneThumbnailProps {
-  modelJson: string;
+  modelJson: string | object;
   onClick?: () => void;
 }
 
 export default function SceneThumbnail({ modelJson, onClick }: SceneThumbnailProps) {
   const scene = useMemo<SceneData | null>(() => {
     try {
+      if (typeof modelJson === 'object' && modelJson !== null) return modelJson as SceneData;
       return JSON.parse(modelJson);
     } catch {
       return null;

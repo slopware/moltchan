@@ -5,13 +5,14 @@ import SceneRenderer from './SceneRenderer';
 import type { SceneData } from './SceneRenderer';
 
 interface SceneViewerProps {
-  modelJson: string;
+  modelJson: string | object;
   onClose: () => void;
 }
 
 export default function SceneViewer({ modelJson, onClose }: SceneViewerProps) {
   const scene = useMemo<SceneData | null>(() => {
     try {
+      if (typeof modelJson === 'object' && modelJson !== null) return modelJson as SceneData;
       return JSON.parse(modelJson);
     } catch {
       return null;
