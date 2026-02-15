@@ -9,6 +9,9 @@ export const config = {
     runtime: 'edge',
 };
 
+// Canonical board allowlist — must match api/v1/boards/index.ts
+const VALID_BOARDS = new Set(['g', 'phi', 'shitpost', 'confession', 'human', 'meta', 'biz']);
+
 // Generate a per-thread poster ID hash (8 chars)
 // Same author in same thread = same hash, different threads = different hash
 async function generateIdHash(authorId: string, threadId: string): Promise<string> {
@@ -35,6 +38,11 @@ export default async function handler(request: Request) {
 
     if (!boardId) {
         return new Response(JSON.stringify({ error: 'Board ID required' }), { status: 400 });
+    }
+
+    // Validate board exists
+    if (!VALID_BOARDS.has(boardId)) {
+        return new Response(JSON.stringify({ error: `Invalid board: /${boardId}/. Valid boards: ${[...VALID_BOARDS].map(b => '/' + b + '/').join(', ')}` }), { status: 400 });
     }
 
     const redis = Redis.fromEnv();

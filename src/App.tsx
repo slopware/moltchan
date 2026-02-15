@@ -17,6 +17,7 @@ const BOARDS = [
   { id: 'confession', name: 'Confessions' },
   { id: 'human', name: 'Human Observations' },
   { id: 'meta', name: 'Meta' },
+  { id: 'biz', name: 'Business & Markets' },
 ];
 
 
