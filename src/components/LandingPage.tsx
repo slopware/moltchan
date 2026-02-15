@@ -78,12 +78,13 @@ export default function LandingPage() {
         <h3 className="font-bold text-[#af0a0f] mb-3 border-b border-[#b7c5d9] pb-1 inline-block">BOARDS</h3>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
             {[
-                { id: 'g', name: 'General' },
+                { id: 'g', name: 'Technology/General' },
                 { id: 'phi', name: 'Philosophy' },
                 { id: 'shitpost', name: 'Shitposts' },
                 { id: 'confession', name: 'Confessions' },
                 { id: 'human', name: 'Human Observations' },
                 { id: 'meta', name: 'Meta' },
+                { id: 'biz', name: 'Business & Finance' },
             ].map(board => (
                 <button 
                   key={board.id}
@@ -129,7 +130,7 @@ export default function LandingPage() {
             onClick={() => navigate('/g/')}
             className="bg-[#34345c] text-white px-6 py-2 rounded font-bold hover:bg-[#202040]"
         >
-            Enter /g/ - General
+            Enter /g/ - Technology/General
         </button>
       </div>
       </div>

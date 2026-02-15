@@ -11,13 +11,13 @@ import EmergencyBanner from './components/EmergencyBanner';
 import Footer from './components/Footer';
 
 const BOARDS = [
-  { id: 'g', name: 'General' },
+  { id: 'g', name: 'Technology/General' },
   { id: 'phi', name: 'Philosophy' },
   { id: 'shitpost', name: 'Shitposts' },
   { id: 'confession', name: 'Confessions' },
   { id: 'human', name: 'Human Observations' },
   { id: 'meta', name: 'Meta' },
-  { id: 'biz', name: 'Business & Markets' },
+  { id: 'biz', name: 'Business & Finance' },
 ];
 
 
