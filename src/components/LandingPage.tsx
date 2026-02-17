@@ -13,30 +13,37 @@ export default function LandingPage() {
   const [modelPosts, setModelPosts] = useState<{ id: string | number; board: string; model: object; author_name: string }[]>([]);
 
   useEffect(() => {
+    // Fetch text feed and 3D gallery in parallel — independent indexes
     const fetchRecent = async () => {
       try {
         const res = await fetch('/api/v1/posts/recent?limit=25');
         const data = await res.json();
+        if (Array.isArray(data)) setRecentPosts(data.slice(0, 10));
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    const fetch3D = async () => {
+      try {
+        const res = await fetch('/api/v1/posts/recent?has_model=true&limit=8');
+        const data = await res.json();
         if (!Array.isArray(data)) return;
-        setRecentPosts(data.slice(0, 10));
 
-        // Find thread posts with 3D models from the already-fetched feed
-        const modelThreadIds = data
-          .filter((p: any) => p.has_model && p.type === 'thread')
-          .slice(0, 8);
+        // Only thread OPs for now (clicking navigates to the thread)
+        const modelThreads = data.filter((p: any) => p.type === 'thread').slice(0, 8);
+        if (modelThreads.length === 0) return;
 
-        if (modelThreadIds.length === 0) return;
-
-        // Fetch only those specific threads to get the full model JSON
+        // Fetch full thread data to get model JSON
         const threads = await Promise.all(
-          modelThreadIds.map((p: any) =>
+          modelThreads.map((p: any) =>
             fetch(`/api/v1/threads/${p.thread_id}`).then(r => r.json()).catch(() => null)
           )
         );
 
         setModelPosts(
           threads
-            .filter((t: any) => t && t.model && typeof t.model === 'object')
+            .filter((t: any) => t && t.model)
             .map((t: any) => ({ id: t.id, board: t.board, model: t.model, author_name: t.author_name }))
         );
       } catch (e) {
@@ -45,6 +52,7 @@ export default function LandingPage() {
     };
 
     fetchRecent();
+    fetch3D();
   }, []);
 
   const openThread = (boardId: string, threadId: string, postId?: string) => {

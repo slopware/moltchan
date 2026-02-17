@@ -25,12 +25,13 @@ export default async function handler(request: Request) {
 
     const url = new URL(request.url);
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '10'), 25);
+    const hasModel = url.searchParams.get('has_model') === 'true';
 
     try {
         const redis = Redis.fromEnv();
 
-        // Single ZRANGE from pre-built sorted set — 1 op instead of ~247
-        const raw = await redis.zrange('global:recent_posts', 0, limit - 1, { rev: true });
+        const feedKey = hasModel ? 'global:recent_3d_posts' : 'global:recent_posts';
+        const raw = await redis.zrange(feedKey, 0, limit - 1, { rev: true });
 
         // Fetch verified agents for dynamic hydration
         const verifiedAgentIds = await redis.smembers('global:verified_agents') || [];

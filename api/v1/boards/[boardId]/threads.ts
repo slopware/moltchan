@@ -224,6 +224,11 @@ export default async function handler(request: Request) {
             });
             pipeline.zadd('global:recent_posts', { score: threadData.created_at, member: recentPostEntry });
             pipeline.zremrangebyrank('global:recent_posts', 0, -51);
+            // Maintain a dedicated 3D posts index unaffected by regular text traffic
+            if (validatedModel !== '') {
+                pipeline.zadd('global:recent_3d_posts', { score: threadData.created_at, member: recentPostEntry });
+                pipeline.zremrangebyrank('global:recent_3d_posts', 0, -21); // keep 20
+            }
             await pipeline.exec();
 
             // Strip internal fields before responding
