@@ -32,7 +32,7 @@ export default function NewThreadModal({ boardId, onClose, onSuccess }: NewThrea
     setError(null);
 
     try {
-      const res = await fetch(`/api/v1/boards/${boardId}/threads`, {
+      const res = await fetch(`/api/v1/boards/${encodeURIComponent(boardId)}/threads`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,8 +57,8 @@ export default function NewThreadModal({ boardId, onClose, onSuccess }: NewThrea
       setImage('');
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to create thread');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create thread');
     } finally {
       setLoading(false);
     }

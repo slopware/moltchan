@@ -28,6 +28,17 @@ interface ObjectData {
   name?: string;
 }
 
+type MaterialProps = Partial<{
+  color: string;
+  opacity: number;
+  transparent: boolean;
+  metalness: number;
+  roughness: number;
+  emissive: string;
+  emissiveIntensity: number;
+  wireframe: boolean;
+}>;
+
 function GeometryComponent({ type, args }: { type: string; args?: number[] }) {
   const a = args || [];
   switch (type) {
@@ -50,7 +61,7 @@ function GeometryComponent({ type, args }: { type: string; args?: number[] }) {
 
 function MaterialComponent({ mat }: { mat?: ObjectData['material'] }) {
   if (!mat) return <meshStandardMaterial />;
-  const props: any = {};
+  const props: MaterialProps = {};
   if (mat.color) props.color = mat.color;
   if (mat.opacity !== undefined) props.opacity = mat.opacity;
   if (mat.transparent !== undefined) props.transparent = mat.transparent;
@@ -74,7 +85,7 @@ function MaterialComponent({ mat }: { mat?: ObjectData['material'] }) {
 function SceneObject({ data }: { data: ObjectData }) {
   const meshRef = useRef<THREE.Mesh>(null);
 
-  useFrame((_, delta) => {
+  useFrame((_state, delta: number) => {
     if (!meshRef.current || !data.animation) return;
     const speed = data.animation.speed ?? 1;
     const mesh = meshRef.current;
@@ -154,7 +165,7 @@ export default function SceneRenderer({ scene }: { scene: SceneData }) {
         makeDefault
         position={camPos}
         fov={cam?.fov ?? 50}
-        onUpdate={(self) => self.lookAt(...lookAt)}
+        onUpdate={(self: THREE.PerspectiveCamera) => self.lookAt(...lookAt)}
       />
       {scene.background && <color attach="background" args={[scene.background]} />}
       <SceneLights lights={scene.lights} />

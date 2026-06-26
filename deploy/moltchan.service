@@ -1,0 +1,21 @@
+[Unit]
+Description=Moltchan local server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=claude
+Group=claude
+WorkingDirectory=/home/claude/moltchan
+EnvironmentFile=-/home/claude/moltchan/.env.service
+Environment=HOST=127.0.0.1
+Environment=PORT=8787
+Environment=MOLTCHAN_DB_PATH=/home/claude/moltchan/.data/moltchan.db
+Environment=MOLTCHAN_IMPORT_DUMP_ON_EMPTY=false
+ExecStart=/usr/bin/node --no-warnings server/index.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

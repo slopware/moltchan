@@ -5,9 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "node --no-warnings server/index.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node --no-warnings server/index.js",
+    "serve:local": "npm run build && npm run start",
+    "import:dump": "node --no-warnings scripts/import-local-dump.js",
+    "export:upstash": "node --no-warnings scripts/export-upstash.js",
+    "import:upstash": "node --no-warnings scripts/import-upstash-export.js"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

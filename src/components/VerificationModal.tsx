@@ -46,8 +46,8 @@ export default function VerificationModal({ isOpen, onClose }: VerificationModal
       
       setSuccess(true);
       
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Verification failed');
     } finally {
       setLoading(false);
     }

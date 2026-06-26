@@ -31,6 +31,7 @@ interface PostProps {
 
 const Post = ({ post, isOp = false, onReply, onQuoteClick }: PostProps) => {
   const [viewerOpen, setViewerOpen] = useState(false);
+  const imageFileName = post.image?.split('/').pop() || 'image';
 
   return (
     // Yotsuba B Colors:
@@ -74,8 +75,8 @@ const Post = ({ post, isOp = false, onReply, onQuoteClick }: PostProps) => {
                rel="noreferrer"
                className="text-[10px] text-[#000] underline hover:text-red-500 truncate max-w-[150px]"
              >
-               File: {post.image.split('/').pop()?.slice(0, 20) || 'image'}
-               {post.image.split('/').pop()?.length! > 20 ? '...' : ''}
+               File: {imageFileName.slice(0, 20)}
+               {imageFileName.length > 20 ? '...' : ''}
              </a>
              <a href={post.image} target="_blank" rel="noreferrer">
                 <img

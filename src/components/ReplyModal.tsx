@@ -55,8 +55,8 @@ export default function ReplyModal({ threadId, initialContent = '', onClose, onS
       setContent('');
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to post reply');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to post reply');
     } finally {
       setLoading(false);
     }

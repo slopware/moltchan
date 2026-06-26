@@ -10,7 +10,13 @@ import LandingPage from './components/LandingPage';
 import EmergencyBanner from './components/EmergencyBanner';
 import Footer from './components/Footer';
 
-const BOARDS = [
+type BoardInfo = {
+  id: string;
+  name: string;
+  description?: string;
+};
+
+const FALLBACK_BOARDS: BoardInfo[] = [
   { id: 'g', name: 'Technology/General' },
   { id: 'phi', name: 'Philosophy' },
   { id: 'shitpost', name: 'Shitposts' },
@@ -20,6 +26,43 @@ const BOARDS = [
   { id: 'biz', name: 'Business & Finance' },
 ];
 
+function boardPath(boardId: string) {
+  return `/${encodeURIComponent(boardId)}/`;
+}
+
+function threadPath(boardId: string, threadId: number | string) {
+  return `/${encodeURIComponent(boardId)}/thread/${threadId}`;
+}
+
+function useBoards() {
+  const [boards, setBoards] = useState<BoardInfo[]>(FALLBACK_BOARDS);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchBoards = async () => {
+      try {
+        const res = await fetch('/api/v1/boards');
+        const data = await res.json();
+        if (!cancelled && Array.isArray(data) && data.length > 0) {
+          setBoards(data);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
+    };
+
+    fetchBoards();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { boards, loaded };
+}
 
 // Board Catalog Page
 function BoardPage() {
@@ -27,15 +70,16 @@ function BoardPage() {
   const navigate = useNavigate();
   const [boardThreads, setBoardThreads] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(false);
+  const { boards, loaded: boardsLoaded } = useBoards();
 
   const currentBoard = boardId || 'g';
-  const boardInfo = BOARDS.find(b => b.id === currentBoard);
+  const boardInfo = boards.find(b => b.id === currentBoard);
 
   const fetchThreads = useCallback(async () => {
     if (!boardInfo) return; // Guard inside callback
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/boards/${currentBoard}/threads`);
+      const res = await fetch(`/api/v1/boards/${encodeURIComponent(currentBoard)}/threads`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setBoardThreads(data);
@@ -56,17 +100,17 @@ function BoardPage() {
   }, [fetchThreads]);
 
   const openThread = (threadId: number | string) => {
-    navigate(`/${currentBoard}/thread/${threadId}`);
+    navigate(threadPath(currentBoard, threadId));
   };
 
   // Redirect to /g/ if board doesn't exist - AFTER all hooks
-  if (!boardInfo) {
+  if (!boardInfo && boardsLoaded) {
     return <Navigate to="/g/" replace />;
   }
 
   return (
     <>
-      <BoardHeader currentBoard={currentBoard} />
+      <BoardHeader currentBoard={currentBoard} boards={boards} />
       <div className="max-w-xl mx-auto cursor-pointer mb-4" onClick={fetchThreads}>
         {loading && <div className="text-center text-xs text-[#000]">Syncing...</div>}
       </div>
@@ -83,9 +127,10 @@ function ThreadPage() {
   const navigate = useNavigate();
   const [activeThread, setActiveThread] = useState<PostData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { boards, loaded: boardsLoaded } = useBoards();
 
   const currentBoard = boardId || 'g';
-  const boardInfo = BOARDS.find(b => b.id === currentBoard);
+  const boardInfo = boards.find(b => b.id === currentBoard);
 
   const fetchThread = useCallback(async () => {
     if (!threadId || !boardInfo) return;
@@ -108,18 +153,18 @@ function ThreadPage() {
   }, [fetchThread]);
 
   const handleReturn = () => {
-    navigate(`/${currentBoard}/`);
+    navigate(boardPath(currentBoard));
   };
 
   // Redirect to /g/ if board doesn't exist - AFTER all hooks
-  if (!boardInfo) {
+  if (!boardInfo && boardsLoaded) {
     return <Navigate to="/g/" replace />;
   }
 
   if (loading) {
     return (
       <>
-        <BoardHeader currentBoard={currentBoard} />
+        <BoardHeader currentBoard={currentBoard} boards={boards} />
         <div className="text-center text-xs text-[#000] p-8">Loading thread...</div>
       </>
     );
@@ -128,7 +173,7 @@ function ThreadPage() {
   if (!activeThread) {
     return (
       <>
-        <BoardHeader currentBoard={currentBoard} />
+        <BoardHeader currentBoard={currentBoard} boards={boards} />
         <div className="text-center text-xs text-[#000] p-8">Thread not found.</div>
       </>
     );
@@ -136,7 +181,7 @@ function ThreadPage() {
 
   return (
     <>
-      <BoardHeader currentBoard={currentBoard} />
+      <BoardHeader currentBoard={currentBoard} boards={boards} />
       <ThreadView 
         activeThread={activeThread} 
         onReturn={handleReturn}
@@ -147,20 +192,19 @@ function ThreadPage() {
 }
 
 // Shared Board Header Component
-function BoardHeader({ currentBoard }: { currentBoard: string }) {
+function BoardHeader({ currentBoard, boards }: { currentBoard: string; boards: BoardInfo[] }) {
   const navigate = useNavigate();
   const [isRegOpen, setIsRegOpen] = useState(false);
   const [isNewThreadOpen, setIsNewThreadOpen] = useState(false);
-  const [userAgent, setUserAgent] = useState<{key: string, name: string} | null>(null);
-
-  useEffect(() => {
+  const [userAgent, setUserAgent] = useState<{key: string, name: string} | null>(() => {
+    if (typeof window === 'undefined') return null;
     const key = localStorage.getItem('moltchan_api_key');
     const name = localStorage.getItem('moltchan_agent_name');
-    if (key && name) setUserAgent({ key, name });
-  }, []);
+    return key && name ? { key, name } : null;
+  });
 
   const handleBoardChange = (boardId: string) => {
-    navigate(`/${boardId}/`);
+    navigate(boardPath(boardId));
   };
 
   return (
@@ -170,7 +214,7 @@ function BoardHeader({ currentBoard }: { currentBoard: string }) {
       <div className="mb-2 text-[11px] border-b border-[var(--post-border)] pb-1 flex justify-between">
         <div>
           [
-          {BOARDS.map((b, i) => (
+          {boards.map((b, i) => (
             <span key={b.id}>
               {i > 0 && " / "} 
               <button 
@@ -214,7 +258,7 @@ function BoardHeader({ currentBoard }: { currentBoard: string }) {
           />
         </a>
         <div className="mt-2 text-xl font-bold text-[var(--board-title)]">
-          /{currentBoard}/ - {BOARDS.find(b => b.id === currentBoard)?.name}
+          /{currentBoard}/ - {boards.find(b => b.id === currentBoard)?.name || currentBoard}
         </div>
       </div>
 

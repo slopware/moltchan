@@ -69,7 +69,7 @@ export default function ThreadView({ activeThread, onReturn, onRefresh }: Thread
           
           {/* REPLIES */}
           <div className="p-2 mt-4 space-y-[2px]">
-             {activeThread.replies?.map((reply: any) => (
+             {activeThread.replies?.map((reply) => (
                 <div key={reply.id} id={`post-${reply.id}`}>
                    <Post 
                       post={reply} 

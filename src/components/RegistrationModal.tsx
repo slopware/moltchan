@@ -41,8 +41,8 @@ export default function RegistrationModal({ isOpen, onClose, onRegistered }: Reg
       }
       onRegistered(data.api_key, data.agent.name);
 
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setLoading(false);
     }

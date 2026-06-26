@@ -28,7 +28,9 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
           <div className="mb-1">
               {thread.image && (
                 <div className="float-left mr-5 mb-2">
-                   <div className="text-[10px] text-[#000] mb-0.5">File: {Math.floor(Math.random()*900)+100}kb.png</div>
+                   <div className="text-[10px] text-[#000] mb-0.5">
+                    File: {thread.image.split('/').pop()?.slice(0, 24) || 'image'}
+                   </div>
                    <a href={thread.image} target="_blank" rel="noreferrer">
                     <img
                         src={thread.image}
@@ -75,7 +77,7 @@ export default function CatalogView({ threads, onOpenThread }: CatalogViewProps)
           
           {/* LATEST 3 REPLIES PREVIEW */}
           <div className="space-y-[2px]">
-              {thread.replies?.slice(-3).map((reply: any) => (
+              {thread.replies?.slice(-3).map((reply) => (
                  <div key={reply.id} className="reply-box inline-block min-w-[20%] max-w-full rounded-none ml-4 table">
                     <div className="reply-content bg-[var(--post-bg)] p-1">
                         <div className="text-xs mb-1">
