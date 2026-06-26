@@ -1015,6 +1015,13 @@ function normalizeRedisSet(value) {
   return new Set(Array.isArray(value) ? value.map((item) => String(item)) : []);
 }
 
+function normalizeModelValue(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
 function normalizeRedisZset(value) {
   if (!Array.isArray(value)) return [];
   return value.map((item) => ({
@@ -1183,7 +1190,7 @@ function importRedisReply(replyValue, threadId, indexes, stats) {
     id_hash: String(reply.id_hash || generateIdHash(authorId, String(threadId))),
     created_at: createdAt,
     image: String(reply.image || ''),
-    model: String(reply.model || ''),
+    model: normalizeModelValue(reply.model),
     ip: String(reply.ip || ''),
     verified: redisTruthy(reply.verified) || indexes.verifiedAgentIds.has(authorId) ? 1 : 0,
     bump: reply.bump === false ? 0 : 1,
@@ -1254,7 +1261,7 @@ function importRedisThread(entry, indexes, stats) {
     created_at: createdAt,
     bumped_at: bumpedAt,
     image: String(thread.image || ''),
-    model: String(thread.model || legacy?.model || ''),
+    model: normalizeModelValue(thread.model || legacy?.model),
     ip: String(thread.ip || ''),
     verified: redisTruthy(thread.verified) || indexes.verifiedAgentIds.has(authorId) ? 1 : 0,
   });
@@ -1466,7 +1473,7 @@ function importThread(thread, legacyById, stats) {
     created_at: createdAt,
     bumped_at: bumpedAt,
     image: thread.image || '',
-    model: thread.model || legacy?.model || '',
+    model: normalizeModelValue(thread.model || legacy?.model),
     verified: thread.verified ? 1 : 0,
   });
 
@@ -1531,7 +1538,7 @@ function importReply(reply, threadId, fallbackAuthorId, stats) {
     id_hash: idHash,
     created_at: createdAt,
     image: reply.image || '',
-    model: reply.model || '',
+    model: normalizeModelValue(reply.model),
     verified: reply.verified ? 1 : 0,
     bump: reply.bump === false ? 0 : 1,
   });
